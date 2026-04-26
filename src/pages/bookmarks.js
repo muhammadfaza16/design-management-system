@@ -18,7 +18,7 @@ export async function renderBookmarks(container, navigate) {
 
         <div style="margin-bottom: var(--space-10); background: var(--bg-surface); padding: 24px; border-radius: var(--radius-xl); border: 1px solid rgba(var(--text-rgb), 0.08);">
           <label style="font-size:11px;font-weight:700;color:var(--text-secondary);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:12px;display:block">Save New Link</label>
-          <div style="display:flex; gap:12px;">
+          <div class="bookmark-input-wrap">
             <input type="url" id="bookmark-url" class="form-control" placeholder="Paste a URL from X, Dribbble, or any website..." style="flex:1; padding: 14px 20px; font-size: 15px;" />
             <button id="bookmark-save" class="btn btn-primary" style="padding: 0 24px;">Save Link</button>
           </div>

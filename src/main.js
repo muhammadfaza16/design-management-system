@@ -23,6 +23,9 @@ async function navigate(page, params = {}) {
   currentPage = page;
   currentParams = params;
 
+  // Auto-close mobile sidebar on navigate
+  document.body.classList.remove('sidebar-open');
+
   // Update sidebar
   await renderSidebar(sidebar, page, navigate);
 
@@ -54,6 +57,13 @@ async function navigate(page, params = {}) {
 }
 
 // Global Events
+document.getElementById('mobile-nav-toggle')?.addEventListener('click', () => {
+  document.body.classList.toggle('sidebar-open');
+});
+document.getElementById('mobile-sidebar-overlay')?.addEventListener('click', () => {
+  document.body.classList.remove('sidebar-open');
+});
+
 window.addEventListener('open-add-design', () => {
   openUploadModal(() => navigate(currentPage, currentParams));
 });

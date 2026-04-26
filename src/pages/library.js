@@ -55,9 +55,9 @@ export async function renderLibrary(container, navigate) {
           `).join('')}
         </div>
 
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:var(--space-6)">
+        <div class="lib-controls">
           <div class="section-title" style="margin-bottom:0">All Designs</div>
-          <div style="display:flex;gap:12px;align-items:center;flex:1;max-width:400px;margin:0 24px;">
+          <div class="lib-search-wrap">
             <input type="text" id="lib-search" class="form-control" placeholder="Search by title or #tag..." value="${currentQuery}" style="padding: 6px 12px; font-size: 13px;" />
           </div>
           <div class="segmented-control" id="lib-filters">
