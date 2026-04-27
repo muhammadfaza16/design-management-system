@@ -1,5 +1,5 @@
 // DesignVault — Design Detail Page
-import { getDesign, updateDesign, deleteDesign, getAllProjects, updateProject } from '../db/store.js';
+import { getDesign, updateDesign, deleteDesign, addDesign, getAllProjects, updateProject } from '../db/store.js';
 import { generatePrompt } from '../utils/prompt-generator.js';
 import { suggestSections, formatSectionsForPrompt } from '../utils/section-suggestions.js';
 import { copyToClipboard, downloadMarkdown } from '../utils/export.js';
@@ -59,6 +59,9 @@ export async function renderDesignDetail(container, navigate, params) {
           <button class="btn btn-ghost btn-danger" id="detail-delete">
             Delete
           </button>
+          <button class="btn btn-secondary" id="detail-duplicate">
+            Duplicate
+          </button>
           <button class="btn btn-secondary" id="detail-edit">
             Edit
           </button>
@@ -82,7 +85,6 @@ export async function renderDesignDetail(container, navigate, params) {
           ` : `
             <div class="detail-image empty" style="aspect-ratio:16/10;display:flex;align-items:center;justify-content:center;">
               <img src="/src/assets/icons/misc-camera.svg" class="illustrative-icon illustrative-icon--lg" style="opacity: 0.1;" alt="No image" />
-            </div>
             </div>
           `}
           
@@ -456,6 +458,26 @@ export async function renderDesignDetail(container, navigate, params) {
   // Edit
   $('#detail-edit').addEventListener('click', () => {
     openUploadModal(() => renderDesignDetail(container, navigate, params), design);
+  });
+
+  // Duplicate
+  $('#detail-duplicate').addEventListener('click', async () => {
+    const clone = await addDesign({
+      title: design.title + ' (Copy)',
+      url: design.url,
+      notes: design.notes,
+      tags: [...design.tags],
+      componentType: design.componentType,
+      colors: design.colors ? [...design.colors] : [],
+      rating: design.rating,
+      prompt: design.prompt,
+      imageData: design.imageData,
+      focalComponents: design.focalComponents ? [...design.focalComponents] : [],
+      aiAnalysis: design.aiAnalysis || '',
+      palette: design.palette ? [...design.palette] : [],
+    });
+    showToast('Design duplicated!', 'success');
+    navigate('detail', { id: clone.id });
   });
 
   // Delete

@@ -428,8 +428,8 @@ export async function searchAll(query = '') {
 // STATS
 // ==========================================
 export async function getStats() {
-  const [designs, projects, prompts, snippets] = await Promise.all([
-    getAllDesigns(), getAllProjects(), getAllPrompts(), getAllSnippets()
+  const [designs, projects, prompts, snippets, bookmarks] = await Promise.all([
+    getAllDesigns(), getAllProjects(), getAllPrompts(), getAllSnippets(), getAllBookmarks()
   ]);
   const allTags = designs.flatMap(d => d.tags);
   const uniqueTags = [...new Set(allTags)];
@@ -438,6 +438,7 @@ export async function getStats() {
     totalProjects: projects.length,
     totalPrompts: prompts.length,
     totalSnippets: snippets.length,
+    totalBookmarks: bookmarks.length,
     totalTags: uniqueTags.length,
     topTags: uniqueTags.map(t => ({ tag: t, count: allTags.filter(x => x === t).length }))
       .sort((a, b) => b.count - a.count).slice(0, 10),

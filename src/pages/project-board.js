@@ -40,19 +40,29 @@ export async function renderProjectBoard(container, navigate, params) {
     else columns.inspiration.push(d);
   });
 
-  const renderCard = (d) => `
+  const renderCard = (d) => {
+    const status = project.designStatuses[d.id] || 'inspiration';
+    const colIdx = COLUMNS.indexOf(status);
+    const canMoveLeft = colIdx > 0;
+    const canMoveRight = colIdx < COLUMNS.length - 1;
+    return `
     <div class="design-card kanban-card" data-id="${d.id}" draggable="true">
       <div class="design-card__thumb" style="aspect-ratio:16/9">
         ${d.imageData ? `<img src="${d.imageData}" alt="${d.title}" />` : `<div class="detail-image empty" style="height:100%;display:flex;align-items:center;justify-content:center;"><img src="/src/assets/icons/misc-camera.svg" class="illustrative-icon" style="opacity:0.1" /></div>`}
       </div>
       <div class="design-card__body" style="padding:12px">
         <div class="design-card__title truncate" style="font-size:12px">${d.title}</div>
-        <div style="margin-top:8px;display:flex;justify-content:flex-end">
+        <div class="kanban-card-actions" style="margin-top:8px;display:flex;justify-content:space-between;align-items:center">
+          <div class="kanban-move-btns" style="display:flex;gap:4px">
+            ${canMoveLeft ? `<button class="btn btn-ghost kanban-move" data-id="${d.id}" data-to="${COLUMNS[colIdx - 1]}" style="font-size:9px;padding:2px 6px" title="Move to ${COLUMNS[colIdx - 1]}">← ${COLUMNS[colIdx - 1].slice(0, 3)}</button>` : ''}
+            ${canMoveRight ? `<button class="btn btn-ghost kanban-move" data-id="${d.id}" data-to="${COLUMNS[colIdx + 1]}" style="font-size:9px;padding:2px 6px" title="Move to ${COLUMNS[colIdx + 1]}">${COLUMNS[colIdx + 1].slice(0, 3)} →</button>` : ''}
+          </div>
           <button class="btn btn-ghost btn-danger board-remove" data-id="${d.id}" style="font-size:10px;padding:2px 6px">Remove</button>
         </div>
       </div>
     </div>
-  `;
+    `;
+  };
 
   container.innerHTML = `
     <div class="page animate-fade-in" style="max-width:100%; padding: 40px;">
@@ -172,6 +182,19 @@ export async function renderProjectBoard(container, navigate, params) {
         showToast('Status updated', 'success');
         renderProjectBoard(container, navigate, params);
       }
+    });
+  });
+
+  // Mobile Move Buttons
+  container.querySelectorAll('.kanban-move').forEach(btn => {
+    btn.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      const id = btn.dataset.id;
+      const to = btn.dataset.to;
+      project.designStatuses[id] = to;
+      await updateProject(project.id, { designStatuses: project.designStatuses });
+      showToast(`Moved to ${to}`, 'success');
+      renderProjectBoard(container, navigate, params);
     });
   });
 

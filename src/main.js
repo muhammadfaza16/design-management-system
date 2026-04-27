@@ -10,6 +10,9 @@ import { renderDesignDetail } from './pages/design-detail.js';
 import { renderProjects, openNewProjectModal } from './pages/projects.js';
 import { renderProjectBoard } from './pages/project-board.js';
 import { renderBookmarks } from './pages/bookmarks.js';
+import { renderPromptVault } from './pages/prompt-vault.js';
+import { renderSnippets } from './pages/snippets.js';
+import { renderStylePresets } from './pages/style-presets.js';
 import { openUploadModal } from './components/upload-modal.js';
 import { initCommandPalette } from './components/command-palette.js';
 
@@ -48,6 +51,15 @@ async function navigate(page, params = {}) {
       break;
     case 'bookmarks':
       await renderBookmarks(main, navigate);
+      break;
+    case 'prompts':
+      await renderPromptVault(main, navigate);
+      break;
+    case 'snippets':
+      await renderSnippets(main, navigate);
+      break;
+    case 'styles':
+      await renderStylePresets(main, navigate);
       break;
     default:
       await renderDashboard(main, navigate);

@@ -1,11 +1,24 @@
 // DesignVault — Bookmarks / Inspirations Page
 import { getAllBookmarks, addBookmark, deleteBookmark } from '../db/store.js';
 import { showToast } from '../components/toast.js';
-import { timeAgo } from '../utils/helpers.js';
+import { timeAgo, debounce } from '../utils/helpers.js';
 
 export async function renderBookmarks(container, navigate) {
+  let searchQuery = '';
+
   async function load() {
-    const bookmarks = await getAllBookmarks();
+    let bookmarks = await getAllBookmarks();
+
+    // Filter by search
+    if (searchQuery) {
+      const q = searchQuery.toLowerCase();
+      bookmarks = bookmarks.filter(b =>
+        (b.title && b.title.toLowerCase().includes(q)) ||
+        (b.url && b.url.toLowerCase().includes(q)) ||
+        (b.publisher && b.publisher.toLowerCase().includes(q)) ||
+        (b.description && b.description.toLowerCase().includes(q))
+      );
+    }
 
     container.innerHTML = `
       <div class="page animate-fade-in">
@@ -23,6 +36,13 @@ export async function renderBookmarks(container, navigate) {
             <button id="bookmark-save" class="btn btn-primary" style="padding: 0 24px;">Save Link</button>
           </div>
         </div>
+
+        <div class="lib-controls" style="margin-bottom:var(--space-6)">
+          <div class="section-title" style="margin-bottom:0">Saved Links <span style="font-weight:400;opacity:0.5">(${bookmarks.length})</span></div>
+          <div class="lib-search-wrap">
+            <input type="text" id="bookmark-search" class="form-control" placeholder="Search bookmarks..." value="${searchQuery}" style="padding: 6px 12px; font-size: 13px;" />
+          </div>
+        </div>
         
         <div id="bookmarks-grid">
           ${bookmarks.length === 0 ? `
@@ -30,9 +50,9 @@ export async function renderBookmarks(container, navigate) {
               <div class="empty-state__icon">
                 <img src="/src/assets/icons/misc-brief.svg" class="illustrative-icon illustrative-icon--lg" style="opacity:0.1" alt="Empty" />
               </div>
-              <div class="empty-state__title">No bookmarks yet</div>
+              <div class="empty-state__title">${searchQuery ? 'No bookmarks match your search' : 'No bookmarks yet'}</div>
               <p class="text-muted" style="text-align:center;max-width:400px;margin:16px auto">
-                Paste a link above to automatically fetch and save its preview image, title, and description.
+                ${searchQuery ? 'Try a different search term.' : 'Paste a link above to automatically fetch and save its preview image, title, and description.'}
               </p>
             </div>
           ` : `
@@ -78,7 +98,6 @@ export async function renderBookmarks(container, navigate) {
       const url = urlInput.value.trim();
       if (!url) return;
 
-      // Basic URL validation
       let validUrl = url;
       if (!/^https?:\/\//i.test(url)) {
         validUrl = 'https://' + url;
@@ -89,7 +108,6 @@ export async function renderBookmarks(container, navigate) {
       urlInput.disabled = true;
 
       try {
-        // Fetch metadata via Microlink API to bypass CORS
         const response = await fetch(`https://api.microlink.io?url=${encodeURIComponent(validUrl)}`);
         const data = await response.json();
 
@@ -109,7 +127,6 @@ export async function renderBookmarks(container, navigate) {
         }
       } catch (err) {
         console.error('Microlink error:', err);
-        // Fallback: save just the URL if Microlink fails
         await addBookmark({ url: validUrl });
         showToast('Saved URL without metadata', 'info');
         load();
@@ -121,10 +138,26 @@ export async function renderBookmarks(container, navigate) {
       if (e.key === 'Enter') handleSave();
     });
 
+    // Search
+    const searchInput = container.querySelector('#bookmark-search');
+    if (searchInput) {
+      searchInput.addEventListener('input', debounce((e) => {
+        searchQuery = e.target.value.trim();
+        load();
+      }, 300));
+      setTimeout(() => {
+        const input = container.querySelector('#bookmark-search');
+        if (input && searchQuery) {
+          input.focus();
+          input.selectionStart = input.selectionEnd = input.value.length;
+        }
+      }, 0);
+    }
+
     // Delete
     container.querySelectorAll('.bookmark-delete').forEach(btn => {
       btn.addEventListener('click', async (e) => {
-        e.preventDefault(); // Prevent opening the link
+        e.preventDefault();
         e.stopPropagation();
         if (confirm('Delete this bookmark?')) {
           await deleteBookmark(btn.dataset.id);

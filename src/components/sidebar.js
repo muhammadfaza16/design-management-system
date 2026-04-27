@@ -47,6 +47,30 @@ export async function renderSidebar(container, currentPage, navigate) {
 
       <div class="sidebar__section">
         <div class="sidebar__section-header">
+          <div class="sidebar__section-label">Toolkit</div>
+        </div>
+        <a class="sidebar__link ${currentPage === 'prompts' ? 'active' : ''}" data-page="prompts">
+          <span class="sidebar__link-icon">
+            <img src="/src/assets/icons/ai-prompt.svg" class="illustrative-icon" alt="" />
+          </span>
+          <span>Prompt Vault</span>
+        </a>
+        <a class="sidebar__link ${currentPage === 'snippets' ? 'active' : ''}" data-page="snippets">
+          <span class="sidebar__link-icon">
+            <img src="/src/assets/icons/action-copy.svg" class="illustrative-icon" alt="" />
+          </span>
+          <span>Snippets</span>
+        </a>
+        <a class="sidebar__link ${currentPage === 'styles' ? 'active' : ''}" data-page="styles">
+          <span class="sidebar__link-icon">
+            <img src="/src/assets/icons/misc-tags.svg" class="illustrative-icon" alt="" />
+          </span>
+          <span>Style Presets</span>
+        </a>
+      </div>
+
+      <div class="sidebar__section">
+        <div class="sidebar__section-header">
           <div class="sidebar__section-label">Projects</div>
           <button class="sidebar__section-action" id="sidebar-add-project" title="New Project">+</button>
         </div>

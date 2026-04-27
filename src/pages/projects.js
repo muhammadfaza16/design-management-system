@@ -74,6 +74,27 @@ export async function renderProjects(container, navigate) {
                     <p class="detail-notes" style="margin-top:12px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:44px">
                       ${p.description || 'No description provided.'}
                     </p>
+                    ${p.designIds.length > 0 ? (() => {
+                      const statuses = p.designStatuses || {};
+                      const insp = p.designIds.filter(id => !statuses[id] || statuses[id] === 'inspiration').length;
+                      const appr = p.designIds.filter(id => statuses[id] === 'approved').length;
+                      const dev = p.designIds.filter(id => statuses[id] === 'development').length;
+                      const total = p.designIds.length;
+                      return `
+                        <div style="margin-top:16px">
+                          <div style="display:flex;height:4px;border-radius:4px;overflow:hidden;background:rgba(var(--text-rgb),0.06)">
+                            ${insp > 0 ? `<div style="width:${insp/total*100}%;background:rgba(var(--text-rgb),0.2)"></div>` : ''}
+                            ${appr > 0 ? `<div style="width:${appr/total*100}%;background:#3b82f6"></div>` : ''}
+                            ${dev > 0 ? `<div style="width:${dev/total*100}%;background:#10b981"></div>` : ''}
+                          </div>
+                          <div style="display:flex;gap:12px;margin-top:6px;font-size:10px;font-weight:600;color:rgba(var(--text-rgb),0.35)">
+                            <span>${insp} Insp</span>
+                            <span style="color:#3b82f6">${appr} Appr</span>
+                            <span style="color:#10b981">${dev} Dev</span>
+                          </div>
+                        </div>
+                      `;
+                    })() : ''}
                     <div class="design-card__meta" style="margin-top:24px;justify-content:space-between">
                       <span>Updated ${timeAgo(p.updatedAt)}</span>
                       <div style="display:flex;gap:4px">

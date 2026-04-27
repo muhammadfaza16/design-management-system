@@ -1,5 +1,5 @@
 // DesignVault — Dashboard Page
-import { getStats } from '../db/store.js';
+import { getStats, getAllDesigns, getAllProjects, getAllBookmarks } from '../db/store.js';
 import { timeAgo } from '../utils/helpers.js';
 
 export async function renderDashboard(container, navigate) {
@@ -23,6 +23,14 @@ export async function renderDashboard(container, navigate) {
           <div class="stat-card__value">${stats.totalProjects}</div>
           <div class="stat-card__label">Projects</div>
         </div>
+        <div class="stat-card" data-nav="bookmarks">
+          <div class="stat-card__value">${stats.totalBookmarks}</div>
+          <div class="stat-card__label">Bookmarks</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card__value">${stats.totalTags}</div>
+          <div class="stat-card__label">Tags</div>
+        </div>
       </div>
 
       <div class="dashboard-grid">
@@ -44,6 +52,28 @@ export async function renderDashboard(container, navigate) {
                   <div class="dashboard-list-item__info">
                     <div class="dashboard-list-item__title">${d.title}</div>
                     <div class="dashboard-list-item__meta">${d.componentType || 'misc'} · ${timeAgo(d.createdAt)}</div>
+                  </div>
+                </div>
+              `).join('')}
+          </div>
+        </div>
+
+        <div class="dashboard-panel">
+          <div class="dashboard-panel__header">
+            <div class="section-title" style="margin:0">Recent Projects</div>
+            <button class="btn btn-ghost" data-nav="projects">View All</button>
+          </div>
+          <div class="dashboard-panel__body">
+            ${stats.recentProjects.length === 0
+              ? '<div class="text-muted" style="padding:20px">No projects yet.</div>'
+              : stats.recentProjects.map(p => `
+                <div class="dashboard-list-item" data-project="${p.id}">
+                  <div class="dashboard-list-item__icon">
+                    <img src="/src/assets/icons/nav-projects.svg" class="illustrative-icon" style="opacity:0.3" alt="" />
+                  </div>
+                  <div class="dashboard-list-item__info">
+                    <div class="dashboard-list-item__title">${p.title}</div>
+                    <div class="dashboard-list-item__meta">${p.designIds.length} refs · ${timeAgo(p.createdAt)}</div>
                   </div>
                 </div>
               `).join('')}
@@ -82,6 +112,10 @@ export async function renderDashboard(container, navigate) {
                 <img src="/src/assets/icons/nav-projects.svg" class="illustrative-icon" alt="" />
                 <span>New Project</span>
               </button>
+              <button class="quick-action" id="qa-export">
+                <img src="/src/assets/icons/action-export.svg" class="illustrative-icon" alt="" />
+                <span>Export Backup</span>
+              </button>
             </div>
           </div>
         </div>
@@ -96,6 +130,9 @@ export async function renderDashboard(container, navigate) {
   container.querySelectorAll('[data-detail]').forEach(el => {
     el.addEventListener('click', () => navigate('detail', { id: el.dataset.detail }));
   });
+  container.querySelectorAll('[data-project]').forEach(el => {
+    el.addEventListener('click', () => navigate('project-board', { id: el.dataset.project }));
+  });
 
   // Quick Actions
   container.querySelector('#qa-add-design')?.addEventListener('click', () => {
@@ -103,5 +140,28 @@ export async function renderDashboard(container, navigate) {
   });
   container.querySelector('#qa-new-project')?.addEventListener('click', () => {
     window.dispatchEvent(new CustomEvent('open-new-project'));
+  });
+
+  // Export Backup
+  container.querySelector('#qa-export')?.addEventListener('click', async () => {
+    try {
+      const [designs, projects, bookmarks] = await Promise.all([
+        getAllDesigns(), getAllProjects(), getAllBookmarks()
+      ]);
+      const backup = {
+        version: 1,
+        exportedAt: new Date().toISOString(),
+        data: { designs, projects, bookmarks }
+      };
+      const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `designvault-backup-${new Date().toISOString().slice(0, 10)}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error('Export failed:', err);
+    }
   });
 }
