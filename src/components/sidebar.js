@@ -49,6 +49,12 @@ export async function renderSidebar(container, currentPage, navigate) {
         <div class="sidebar__section-header">
           <div class="sidebar__section-label">Toolkit</div>
         </div>
+        <a class="sidebar__link ${currentPage === 'knowledge' ? 'active' : ''}" data-page="knowledge">
+          <span class="sidebar__link-icon">
+            <img src="/src/assets/icons/misc-notes.svg" class="illustrative-icon" alt="" />
+          </span>
+          <span>Knowledge Bank</span>
+        </a>
         <a class="sidebar__link ${currentPage === 'prompts' ? 'active' : ''}" data-page="prompts">
           <span class="sidebar__link-icon">
             <img src="/src/assets/icons/ai-prompt.svg" class="illustrative-icon" alt="" />

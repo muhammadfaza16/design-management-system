@@ -1,6 +1,7 @@
 // DesignVault — Aesthetic DNA Prompt Engine
 // Generates miss-proof, deep-scan prompts from design references.
 // Output is meant to be pasted into Antigravity/ChatGPT alongside the reference image.
+import { formatKnowledgeInjections } from './knowledge-base.js';
 
 export function generatePrompt(design) {
   const s = [];
@@ -199,6 +200,14 @@ export function generatePrompt(design) {
   s.push('- Use semantic HTML5 and CSS custom properties from the token block above.');
   s.push('- Add brief inline comments linking decisions back to extracted tokens.');
   s.push('');
+
+  // ============================================
+  // KNOWLEDGE INJECTIONS
+  // ============================================
+  if (design.knowledgeInjections && design.knowledgeInjections.length > 0) {
+    s.push('---');
+    s.push(formatKnowledgeInjections(design.knowledgeInjections));
+  }
 
   // ============================================
   // ANTI-HALLUCINATION GUARD

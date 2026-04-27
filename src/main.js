@@ -13,6 +13,7 @@ import { renderBookmarks } from './pages/bookmarks.js';
 import { renderPromptVault } from './pages/prompt-vault.js';
 import { renderSnippets } from './pages/snippets.js';
 import { renderStylePresets } from './pages/style-presets.js';
+import { renderKnowledgeBank } from './pages/knowledge-bank.js';
 import { openUploadModal } from './components/upload-modal.js';
 import { initCommandPalette } from './components/command-palette.js';
 
@@ -54,6 +55,9 @@ async function navigate(page, params = {}) {
       break;
     case 'prompts':
       await renderPromptVault(main, navigate);
+      break;
+    case 'knowledge':
+      await renderKnowledgeBank(main, navigate);
       break;
     case 'snippets':
       await renderSnippets(main, navigate);

@@ -7,6 +7,7 @@ import { showToast } from '../components/toast.js';
 import { openLightbox } from '../components/lightbox.js';
 import { openUploadModal } from '../components/upload-modal.js';
 import { formatDate, getTagColor, extractColorsFromImage } from '../utils/helpers.js';
+import { KNOWLEDGE_BANK } from '../utils/knowledge-base.js';
 
 export async function renderDesignDetail(container, navigate, params) {
   const [design, projects] = await Promise.all([
@@ -124,6 +125,22 @@ export async function renderDesignDetail(container, navigate, params) {
               style="margin-bottom:8px;resize:vertical;min-height:80px">${design.useCase || ''}</textarea>
             
             <div id="section-suggestions" style="margin-top:12px"></div>
+            
+            <!-- Knowledge Injection UI -->
+            <div style="margin-top:20px;margin-bottom:12px">
+              <label style="font-size:11px;font-weight:600;color:var(--text-secondary);display:block;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.05em">
+                Inject Design Principles
+                <span style="opacity:0.4;font-weight:400;text-transform:none;letter-spacing:0">(optional)</span>
+              </label>
+              <div style="display:flex;flex-wrap:wrap;gap:6px" id="knowledge-injections">
+                ${KNOWLEDGE_BANK.map(k => `
+                  <button class="filter-chip knowledge-chip ${design.knowledgeInjections && design.knowledgeInjections.includes(k.id) ? 'active' : ''}" data-kid="${k.id}" title="${k.description}">
+                    + ${k.title}
+                  </button>
+                `).join('')}
+              </div>
+            </div>
+
             <div style="display:flex;gap:8px;margin-top:12px">
               <button class="btn btn-primary" id="generate-final" style="font-size:13px">
                 <img src="/src/assets/icons/ai-prompt.svg" class="illustrative-icon" alt="" />
@@ -299,9 +316,11 @@ export async function renderDesignDetail(container, navigate, params) {
   $('#detail-copy-prompt').addEventListener('click', copyPromptText);
   $('#prompt-copy').addEventListener('click', copyPromptText);
   // =============================================
-  // SECTION SUGGESTIONS
+  // SECTION SUGGESTIONS & KNOWLEDGE INJECTIONS
   // =============================================
   let selectedSections = design.selectedSections ? [...design.selectedSections] : [];
+  let selectedKnowledge = design.knowledgeInjections ? [...design.knowledgeInjections] : [];
+  
   const suggestionsEl = container.querySelector('#section-suggestions');
 
   function renderSuggestions(text) {
@@ -378,7 +397,21 @@ export async function renderDesignDetail(container, navigate, params) {
     renderSuggestions(design.useCase);
   }
 
-  // Generate Final Prompt with use case + sections
+  // Knowledge toggle
+  container.querySelectorAll('.knowledge-chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      const kid = chip.dataset.kid;
+      if (selectedKnowledge.includes(kid)) {
+        selectedKnowledge = selectedKnowledge.filter(id => id !== kid);
+        chip.classList.remove('active');
+      } else {
+        selectedKnowledge.push(kid);
+        chip.classList.add('active');
+      }
+    });
+  });
+
+  // Generate Final Prompt with use case + sections + knowledge
   $('#generate-final').addEventListener('click', async () => {
     const useCase = $('#use-case-input').value.trim();
     const projectId = $('#project-select').value;
@@ -388,11 +421,12 @@ export async function renderDesignDetail(container, navigate, params) {
       return;
     }
     
-    // Update design with project linkage
-    await updateDesign(design.id, { useCase, selectedSections, projectId });
+    // Update design with project linkage and knowledge
+    await updateDesign(design.id, { useCase, selectedSections, projectId, knowledgeInjections: selectedKnowledge });
     design.useCase = useCase;
     design.selectedSections = selectedSections;
     design.projectId = projectId;
+    design.knowledgeInjections = selectedKnowledge;
     
     // If a project is selected, ensure this design is added to its designIds
     if (projectId) {
@@ -434,17 +468,18 @@ export async function renderDesignDetail(container, navigate, params) {
     const useCase = $('#use-case-input').value.trim();
     const projectId = $('#project-select').value;
     if (useCase !== (design.useCase || '')) {
-      await updateDesign(design.id, { useCase, selectedSections, projectId });
+      await updateDesign(design.id, { useCase, selectedSections, projectId, knowledgeInjections: selectedKnowledge });
       design.useCase = useCase;
       design.selectedSections = selectedSections;
       design.projectId = projectId;
+      design.knowledgeInjections = selectedKnowledge;
     }
   });
 
   $('#project-select').addEventListener('change', async () => {
     const useCase = $('#use-case-input').value.trim();
     const projectId = $('#project-select').value;
-    await updateDesign(design.id, { useCase, selectedSections, projectId });
+    await updateDesign(design.id, { useCase, selectedSections, projectId, knowledgeInjections: selectedKnowledge });
     design.projectId = projectId;
     showToast('Project link updated', 'info');
   });
