@@ -3,47 +3,67 @@ import { KNOWLEDGE_BANK, getKnowledgeCategories } from '../utils/knowledge-base.
 import { copyToClipboard } from '../utils/export.js';
 import { showToast } from '../components/toast.js';
 
+const CATEGORY_ICONS = {
+  'Layout & Composition': '⊞',
+  'Typography': 'Aa',
+  'Color Theory': '◑',
+  'Depth & Elevation': '◇',
+  'Motion & Interaction': '↝',
+  'UX Psychology': '◉',
+  'Responsive Design': '⊟',
+  'Component Patterns': '☐'
+};
+
 export async function renderKnowledgeBank(container, navigate) {
-  let activeCategory = 'Design 101';
+  let activeCategory = '';
   const categories = getKnowledgeCategories();
 
   function load() {
-    const items = KNOWLEDGE_BANK.filter(k => k.category === activeCategory);
+    const items = activeCategory
+      ? KNOWLEDGE_BANK.filter(k => k.category === activeCategory)
+      : KNOWLEDGE_BANK;
 
     container.innerHTML = `
       <div class="page animate-fade-in">
-        <div class="page__header" style="margin-bottom:var(--space-8)">
+        <div class="page__header" style="margin-bottom:var(--space-6)">
           <div>
             <h1 class="page__title">Knowledge Bank</h1>
-            <p class="page__subtitle">Design principles and advanced UX rules, formulated as AI prompt directives.</p>
+            <p class="page__subtitle">${KNOWLEDGE_BANK.length} design principles & AI prompt directives across ${categories.length} categories</p>
           </div>
         </div>
 
-        <div class="segmented-control" id="kb-tabs" style="margin-bottom:var(--space-6); display:inline-flex;">
-          ${categories.map(c => `
-            <button class="segmented-control__item ${activeCategory === c ? 'active' : ''}" data-cat="${c}">${c}</button>
-          `).join('')}
+        <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:var(--space-8)" id="kb-tabs">
+          <button class="filter-chip ${!activeCategory ? 'active' : ''}" data-cat="" style="font-size:12px;padding:6px 14px">
+            All (${KNOWLEDGE_BANK.length})
+          </button>
+          ${categories.map(c => {
+            const count = KNOWLEDGE_BANK.filter(k => k.category === c).length;
+            const icon = CATEGORY_ICONS[c] || '•';
+            return `<button class="filter-chip ${activeCategory === c ? 'active' : ''}" data-cat="${c}" style="font-size:12px;padding:6px 14px">
+              <span style="font-size:14px;margin-right:4px;opacity:0.6">${icon}</span> ${c} (${count})
+            </button>`;
+          }).join('')}
         </div>
 
-        <div class="design-grid" style="grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));">
+        <div class="design-grid" style="grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));">
           ${items.map(k => `
-            <div class="design-card" style="display:flex;flex-direction:column;">
+            <div class="design-card kb-card" style="display:flex;flex-direction:column;" data-category="${k.category}">
               <div class="design-card__body" style="padding:24px;flex:1;display:flex;flex-direction:column;">
-                <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px;">
-                  <h3 style="font-size:16px;font-weight:600;color:var(--text-primary);margin:0;">${k.title}</h3>
+                <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px;gap:8px">
+                  <span class="badge" style="font-size:10px;flex-shrink:0">${k.category}</span>
                 </div>
-                <p style="font-size:13px;color:rgba(var(--text-rgb),0.6);line-height:1.5;margin-bottom:16px;">
+                <h3 style="font-size:16px;font-weight:600;color:var(--text-primary);margin:8px 0 0;">${k.title}</h3>
+                <p style="font-size:13px;color:rgba(var(--text-rgb),0.6);line-height:1.55;margin:10px 0 16px;">
                   ${k.description}
                 </p>
-                <div style="background:var(--bg-input);border-radius:8px;padding:12px;margin-top:auto;">
-                  <div style="font-size:10px;font-weight:700;color:rgba(var(--text-rgb),0.4);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px;">AI Directive</div>
-                  <p style="font-family:var(--font-mono);font-size:11px;color:rgba(var(--text-rgb),0.5);margin:0;line-height:1.4;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;" title="${k.aiPrompt}">
+                <div style="background:var(--bg-input);border-radius:8px;padding:12px;margin-top:auto;border:1px solid rgba(var(--text-rgb),0.04)">
+                  <div style="font-size:10px;font-weight:700;color:rgba(var(--text-rgb),0.35);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px">AI Directive</div>
+                  <p style="font-family:var(--font-mono);font-size:11px;color:rgba(var(--text-rgb),0.5);margin:0;line-height:1.45;display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden;" title="${k.aiPrompt.replace(/"/g, '&quot;')}">
                     ${k.aiPrompt}
                   </p>
                 </div>
-                <div style="margin-top:16px;display:flex;justify-content:flex-end;">
-                  <button class="btn btn-secondary kb-copy" data-id="${k.id}" style="font-size:11px;padding:6px 12px;">
-                    <img src="/src/assets/icons/action-copy.svg" class="illustrative-icon illustrative-icon--sm" alt="" />
+                <div style="margin-top:12px;display:flex;justify-content:flex-end;">
+                  <button class="btn btn-secondary kb-copy" data-id="${k.id}" style="font-size:11px;padding:6px 14px;">
                     Copy Directive
                   </button>
                 </div>
@@ -55,7 +75,7 @@ export async function renderKnowledgeBank(container, navigate) {
     `;
 
     // Tab Listeners
-    container.querySelectorAll('#kb-tabs .segmented-control__item').forEach(btn => {
+    container.querySelectorAll('#kb-tabs .filter-chip').forEach(btn => {
       btn.addEventListener('click', () => {
         activeCategory = btn.dataset.cat;
         load();
@@ -69,7 +89,7 @@ export async function renderKnowledgeBank(container, navigate) {
         const item = KNOWLEDGE_BANK.find(k => k.id === btn.dataset.id);
         if (item) {
           await copyToClipboard(item.aiPrompt);
-          showToast('Directive copied to clipboard!', 'success');
+          showToast('Directive copied!', 'success');
         }
       });
     });
