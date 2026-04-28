@@ -249,6 +249,7 @@
    ==================== */
 .lib-controls {
   display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-6);
+  flex-wrap: wrap; gap: 16px;
 }
 .lib-search-wrap {
   display: flex; gap: 12px; align-items: center; flex: 1; max-width: 400px; margin: 0 24px;

@@ -10,6 +10,9 @@ import { formatDate, getTagColor, extractColorsFromImage } from '../utils/helper
 import { KNOWLEDGE_BANK } from '../utils/knowledge-base.js';
 
 export async function renderDesignDetail(container, navigate, params) {
+  const DNA_FEATURES = ['Typography', 'Color Palette', 'Layout & Grid', 'Shadows & Elevation', 'Micro-interactions', 'Imagery & Illustration', 'Card Anatomy', 'Borders & Shapes', 'Data Viz'];
+  const DNA_VIBES = ['Minimalist', 'Premium', 'Playful', 'Brutalist', 'Enterprise SaaS', 'Editorial', 'Dark Mode', 'Glassmorphism', 'Retro'];
+
   const [design, projects] = await Promise.all([
     getDesign(params.id),
     getAllProjects()
@@ -105,6 +108,45 @@ export async function renderDesignDetail(container, navigate, params) {
             </div>
           </div>
           ` : ''}
+
+          <!-- AESTHETIC DNA EXTRACTION LAYER -->
+          <div class="detail-section" style="margin-top:var(--space-8); background:rgba(var(--text-rgb),0.02); padding:24px; border-radius:12px; border:1px solid rgba(var(--text-rgb),0.06)">
+            <div class="detail-section__title" style="margin-bottom:16px">
+              <img src="/src/assets/icons/misc-tags.svg" class="illustrative-icon" alt="DNA" />
+              Aesthetic DNA Extraction
+            </div>
+            <p style="font-size:13px;color:var(--text-secondary);margin-bottom:20px;margin-top:-8px">
+              What makes this reference special? Extracting its DNA helps you find it later and generates a hyper-focused AI prompt.
+            </p>
+
+            <div style="margin-bottom:20px">
+              <label style="font-size:11px;font-weight:700;color:var(--text-secondary);display:block;margin-bottom:8px;text-transform:uppercase;letter-spacing:0.05em">Standout Features</label>
+              <div style="display:flex;flex-wrap:wrap;gap:8px" id="dna-features">
+                ${DNA_FEATURES.map(f => `
+                  <button class="filter-chip dna-chip ${design.aestheticFeatures && design.aestheticFeatures.includes(f) ? 'active' : ''}" data-type="feature" data-val="${f}">
+                    ${f}
+                  </button>
+                `).join('')}
+              </div>
+            </div>
+
+            <div style="margin-bottom:20px">
+              <label style="font-size:11px;font-weight:700;color:var(--text-secondary);display:block;margin-bottom:8px;text-transform:uppercase;letter-spacing:0.05em">Vibe & Mood</label>
+              <div style="display:flex;flex-wrap:wrap;gap:8px" id="dna-vibes">
+                ${DNA_VIBES.map(v => `
+                  <button class="filter-chip dna-chip ${design.aestheticVibes && design.aestheticVibes.includes(v) ? 'active' : ''}" data-type="vibe" data-val="${v}">
+                    ${v}
+                  </button>
+                `).join('')}
+              </div>
+            </div>
+
+            <div>
+              <label style="font-size:11px;font-weight:700;color:var(--text-secondary);display:block;margin-bottom:8px;text-transform:uppercase;letter-spacing:0.05em">The Special Sauce (Note)</label>
+              <textarea id="dna-sauce" class="form-control" rows="2" placeholder="e.g., 'The way the glassmorphism card overlaps the dark hero section...'"
+                style="resize:vertical;min-height:60px;background:var(--bg-surface)">${design.specialSauceNote || ''}</textarea>
+            </div>
+          </div>
 
           <div class="detail-section" style="margin-top:var(--space-8)">
             <div class="detail-section__title" style="margin-bottom:12px">
@@ -316,10 +358,12 @@ export async function renderDesignDetail(container, navigate, params) {
   $('#detail-copy-prompt').addEventListener('click', copyPromptText);
   $('#prompt-copy').addEventListener('click', copyPromptText);
   // =============================================
-  // SECTION SUGGESTIONS & KNOWLEDGE INJECTIONS
+  // SECTION SUGGESTIONS, KNOWLEDGE INJECTIONS & DNA
   // =============================================
   let selectedSections = design.selectedSections ? [...design.selectedSections] : [];
   let selectedKnowledge = design.knowledgeInjections ? [...design.knowledgeInjections] : [];
+  let aestheticFeatures = design.aestheticFeatures ? [...design.aestheticFeatures] : [];
+  let aestheticVibes = design.aestheticVibes ? [...design.aestheticVibes] : [];
   
   const suggestionsEl = container.querySelector('#section-suggestions');
 
@@ -409,6 +453,39 @@ export async function renderDesignDetail(container, navigate, params) {
         chip.classList.add('active');
       }
     });
+  });
+
+  // DNA Extraction toggle
+  container.querySelectorAll('.dna-chip').forEach(chip => {
+    chip.addEventListener('click', async () => {
+      const type = chip.dataset.type;
+      const val = chip.dataset.val;
+      const targetArr = type === 'feature' ? aestheticFeatures : aestheticVibes;
+      
+      if (targetArr.includes(val)) {
+        const idx = targetArr.indexOf(val);
+        targetArr.splice(idx, 1);
+        chip.classList.remove('active');
+      } else {
+        targetArr.push(val);
+        chip.classList.add('active');
+      }
+      
+      // Auto-save
+      await updateDesign(design.id, { aestheticFeatures, aestheticVibes });
+      design.aestheticFeatures = aestheticFeatures;
+      design.aestheticVibes = aestheticVibes;
+    });
+  });
+
+  // Auto-save Special Sauce
+  $('#dna-sauce').addEventListener('blur', async () => {
+    const specialSauceNote = $('#dna-sauce').value.trim();
+    if (specialSauceNote !== (design.specialSauceNote || '')) {
+      await updateDesign(design.id, { specialSauceNote });
+      design.specialSauceNote = specialSauceNote;
+      showToast('DNA Note saved');
+    }
   });
 
   // Generate Final Prompt with use case + sections + knowledge

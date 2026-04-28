@@ -406,7 +406,10 @@ export async function searchDesigns(query = '', filters = {}) {
     const matchesTag = !filters.tag || (d.tags && d.tags.includes(filters.tag));
     const matchesComponent = !filters.componentType || d.componentType === filters.componentType;
     const matchesRating = !filters.minRating || d.rating >= filters.minRating;
-    return matchesQuery && matchesTag && matchesComponent && matchesRating;
+    const matchesFeature = !filters.aestheticFeature || (d.aestheticFeatures && d.aestheticFeatures.includes(filters.aestheticFeature));
+    const matchesVibe = !filters.aestheticVibe || (d.aestheticVibes && d.aestheticVibes.includes(filters.aestheticVibe));
+    
+    return matchesQuery && matchesTag && matchesComponent && matchesRating && matchesFeature && matchesVibe;
   });
 }
 

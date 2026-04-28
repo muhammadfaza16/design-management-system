@@ -19,7 +19,7 @@ export function generatePrompt(design) {
   s.push('');
 
   // ============================================
-  // REFERENCE CONTEXT
+  // REFERENCE CONTEXT & AESTHETIC DNA
   // ============================================
   s.push('---');
   s.push(`## REFERENCE: "${design.title}"`);
@@ -27,6 +27,33 @@ export function generatePrompt(design) {
   if (design.componentType) s.push(`Component Classification: **${design.componentType}**`);
   if (design.notes) s.push(`Curator Notes: ${design.notes}`);
   s.push('');
+
+  const hasFeatures = design.aestheticFeatures && design.aestheticFeatures.length > 0;
+  const hasVibes = design.aestheticVibes && design.aestheticVibes.length > 0;
+
+  if (hasFeatures || hasVibes || design.specialSauceNote) {
+    s.push('### 🎯 HYPER-FOCUS: AESTHETIC DNA & SPECIAL SAUCE');
+    s.push('This specific reference was saved because of its exceptional execution in the following areas. You MUST pay extra, hyper-focused attention to extracting these specific traits with extreme precision:');
+    
+    if (hasFeatures) {
+      s.push('');
+      s.push(`**Standout Features:** ${design.aestheticFeatures.join(', ')}`);
+      s.push('> DO NOT rely on generic values for these features. Extract the EXACT values (hex codes, pixel gaps, easing curves, layout ratios, component anatomy) from the reference.');
+    }
+    
+    if (hasVibes) {
+      s.push('');
+      s.push(`**Vibe & Mood:** ${design.aestheticVibes.join(', ')}`);
+      s.push('> The final generated code MUST strictly capture this exact vibe.');
+    }
+
+    if (design.specialSauceNote) {
+      s.push('');
+      s.push(`**Designer's Note (The "Special Sauce"):** "${design.specialSauceNote}"`);
+      s.push('> Ensure this specific detail is replicated perfectly in your output.');
+    }
+    s.push('');
+  }
 
   // Inject known metadata as "seed hints"
   if (design.colors && design.colors.length > 0) {
