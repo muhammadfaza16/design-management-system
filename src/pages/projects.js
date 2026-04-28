@@ -6,6 +6,8 @@ import { timeAgo } from '../utils/helpers.js';
 let currentFolderId = 'all';
 
 export async function renderProjects(container, navigate) {
+  let isInitialized = false;
+
   async function load() {
     const [projects, folders] = await Promise.all([
       getAllProjects(),
@@ -16,34 +18,71 @@ export async function renderProjects(container, navigate) {
       ? projects 
       : projects.filter(p => p.folderId === currentFolderId);
 
-    container.innerHTML = `
-      <div class="page animate-fade-in">
-        <div class="page__header">
-          <div>
-            <h1 class="page__title">Projects</h1>
-            <p class="page__subtitle">Organize designs by client or project intelligence</p>
-          </div>
-          <button class="btn btn-primary" id="proj-add">
-            <img src="/src/assets/icons/action-add.svg" class="illustrative-icon" alt="Add" />
-            New Project
-          </button>
-        </div>
-
-        <div style="display:flex;align-items:center;gap:12px;margin-bottom:24px;overflow-x:auto;padding-bottom:8px">
-          <button class="filter-chip ${currentFolderId === 'all' ? 'active' : ''}" data-folder="all">All Projects</button>
-          ${folders.map(f => `
-            <button class="filter-chip ${currentFolderId === f.id ? 'active' : ''}" data-folder="${f.id}" style="display:flex;align-items:center;gap:6px">
-              <span style="width:8px;height:8px;border-radius:50%;background:${f.color}"></span>
-              ${f.name}
+    if (!isInitialized) {
+      container.innerHTML = `
+        <div class="page animate-fade-in">
+          <div class="page__header">
+            <div>
+              <h1 class="page__title">Projects</h1>
+              <p class="page__subtitle">Organize designs by client or project intelligence</p>
+            </div>
+            <button class="btn btn-primary" id="proj-add">
+              <img src="/src/assets/icons/action-add.svg" class="illustrative-icon" alt="Add" />
+              New Project
             </button>
-          `).join('')}
-          <button class="btn-ghost" id="folder-add" style="font-size:11px;font-weight:600;padding:4px 10px;border-radius:6px;display:flex;align-items:center;gap:4px">
-            <img src="/src/assets/icons/action-add.svg" class="illustrative-icon illustrative-icon--sm" alt="Add" />
-            New Folder
-          </button>
+          </div>
+
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:24px;overflow-x:auto;padding-bottom:8px" id="proj-tabs"></div>
+          
+          <div id="proj-grid"></div>
         </div>
-        
-        <div id="proj-grid">
+      `;
+
+      // New project
+      container.querySelector('#proj-add').addEventListener('click', () => {
+        window.dispatchEvent(new CustomEvent('open-new-project'));
+      });
+
+      isInitialized = true;
+    }
+
+    // Render Tabs
+    container.querySelector('#proj-tabs').innerHTML = `
+      <button class="filter-chip ${currentFolderId === 'all' ? 'active' : ''}" data-folder="all">All Projects</button>
+      ${folders.map(f => `
+        <button class="filter-chip ${currentFolderId === f.id ? 'active' : ''}" data-folder="${f.id}" style="display:flex;align-items:center;gap:6px">
+          <span style="width:8px;height:8px;border-radius:50%;background:${f.color}"></span>
+          ${f.name}
+        </button>
+      `).join('')}
+      <button class="btn-ghost" id="folder-add" style="font-size:11px;font-weight:600;padding:4px 10px;border-radius:6px;display:flex;align-items:center;gap:4px">
+        <img src="/src/assets/icons/action-add.svg" class="illustrative-icon illustrative-icon--sm" alt="Add" />
+        New Folder
+      </button>
+    `;
+
+    // Folder Add Listener (Since tabs are re-rendered)
+    container.querySelector('#folder-add').addEventListener('click', async () => {
+      const name = prompt('Folder Name (e.g. Landing Pages):');
+      if (!name) return;
+      const colors = ['#8b5cf6', '#10b981', '#d97706', '#ec4899', '#3b82f6', '#f43f5e', '#14b8a6'];
+      const color = colors[Math.floor(Math.random() * colors.length)];
+      const folder = await addProjectFolder({ name, color });
+      currentFolderId = folder.id;
+      showToast('Folder created', 'success');
+      load();
+    });
+
+    // Tab Listeners
+    container.querySelectorAll('.filter-chip').forEach(btn => {
+      btn.addEventListener('click', () => {
+        currentFolderId = btn.dataset.folder;
+        load();
+      });
+    });
+
+    // Render Content
+    container.querySelector('#proj-grid').innerHTML = `
           ${filteredProjects.length === 0 ? `
             <div class="empty-state">
               <div class="empty-state__icon">
@@ -108,37 +147,9 @@ export async function renderProjects(container, navigate) {
               }).join('')}
             </div>
           `}
-        </div>
-      </div>
     `;
-
-    // New project
-    container.querySelector('#proj-add').addEventListener('click', () => {
-      window.dispatchEvent(new CustomEvent('open-new-project'));
-    });
-
-    // New Folder
-    container.querySelector('#folder-add').addEventListener('click', async () => {
-      const name = prompt('Folder Name (e.g. Landing Pages):');
-      if (!name) return;
-      
-      // Pick a random pleasant color
-      const colors = ['#8b5cf6', '#10b981', '#d97706', '#ec4899', '#3b82f6', '#f43f5e', '#14b8a6'];
-      const color = colors[Math.floor(Math.random() * colors.length)];
-      
-      const folder = await addProjectFolder({ name, color });
-      currentFolderId = folder.id;
-      showToast('Folder created', 'success');
-      load();
-    });
-
-    // Folder Tabs
-    container.querySelectorAll('.filter-chip').forEach(btn => {
-      btn.addEventListener('click', () => {
-        currentFolderId = btn.dataset.folder;
-        load();
-      });
-    });
+    
+    // Dynamic Listeners
 
     // Navigate to project
     container.querySelectorAll('.project-item-card').forEach(card => {

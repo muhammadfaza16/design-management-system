@@ -18,34 +18,58 @@ export async function renderKnowledgeBank(container, navigate) {
   let activeCategory = '';
   const categories = getKnowledgeCategories();
 
+  let isInitialized = false;
+
   function load() {
     const items = activeCategory
       ? KNOWLEDGE_BANK.filter(k => k.category === activeCategory)
       : KNOWLEDGE_BANK;
 
-    container.innerHTML = `
-      <div class="page animate-fade-in">
-        <div class="page__header" style="margin-bottom:var(--space-6)">
-          <div>
-            <h1 class="page__title">Knowledge Bank</h1>
-            <p class="page__subtitle">${KNOWLEDGE_BANK.length} design principles & AI prompt directives across ${categories.length} categories</p>
+    if (!isInitialized) {
+      container.innerHTML = `
+        <div class="page animate-fade-in">
+          <div class="page__header" style="margin-bottom:var(--space-6)">
+            <div>
+              <h1 class="page__title">Knowledge Bank</h1>
+              <p class="page__subtitle">${KNOWLEDGE_BANK.length} design principles & AI prompt directives across ${categories.length} categories</p>
+            </div>
           </div>
-        </div>
 
-        <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:var(--space-8)" id="kb-tabs">
-          <button class="filter-chip ${!activeCategory ? 'active' : ''}" data-cat="" style="font-size:12px;padding:6px 14px">
-            All (${KNOWLEDGE_BANK.length})
-          </button>
-          ${categories.map(c => {
-            const count = KNOWLEDGE_BANK.filter(k => k.category === c).length;
-            const icon = CATEGORY_ICONS[c] || '•';
-            return `<button class="filter-chip ${activeCategory === c ? 'active' : ''}" data-cat="${c}" style="font-size:12px;padding:6px 14px">
-              <span style="font-size:14px;margin-right:4px;opacity:0.6">${icon}</span> ${c} (${count})
-            </button>`;
-          }).join('')}
-        </div>
+          <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:var(--space-8)" id="kb-tabs">
+            <button class="filter-chip ${!activeCategory ? 'active' : ''}" data-cat="" style="font-size:12px;padding:6px 14px">
+              All (${KNOWLEDGE_BANK.length})
+            </button>
+            ${categories.map(c => {
+              const count = KNOWLEDGE_BANK.filter(k => k.category === c).length;
+              const icon = CATEGORY_ICONS[c] || '•';
+              return `<button class="filter-chip ${activeCategory === c ? 'active' : ''}" data-cat="${c}" style="font-size:12px;padding:6px 14px">
+                <span style="font-size:14px;margin-right:4px;opacity:0.6">${icon}</span> ${c} (${count})
+              </button>`;
+            }).join('')}
+          </div>
 
-        <div class="design-grid" style="grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));">
+          <div class="design-grid" id="kb-content" style="grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));"></div>
+        </div>
+      `;
+
+      // Tab Listeners (Only attach once)
+      container.querySelectorAll('#kb-tabs .filter-chip').forEach(btn => {
+        btn.addEventListener('click', () => {
+          activeCategory = btn.dataset.cat;
+          load();
+        });
+      });
+
+      isInitialized = true;
+    }
+
+    // Update active tab styles
+    container.querySelectorAll('#kb-tabs .filter-chip').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.cat === activeCategory);
+    });
+
+    // Render content
+    container.querySelector('#kb-content').innerHTML = `
           ${items.map(k => `
             <div class="design-card kb-card" style="display:flex;flex-direction:column;" data-category="${k.category}">
               <div class="design-card__body" style="padding:24px;flex:1;display:flex;flex-direction:column;">
@@ -70,17 +94,7 @@ export async function renderKnowledgeBank(container, navigate) {
               </div>
             </div>
           `).join('')}
-        </div>
-      </div>
-    `;
-
-    // Tab Listeners
-    container.querySelectorAll('#kb-tabs .filter-chip').forEach(btn => {
-      btn.addEventListener('click', () => {
-        activeCategory = btn.dataset.cat;
-        load();
-      });
-    });
+        `;
 
     // Copy Listeners
     container.querySelectorAll('.kb-copy').forEach(btn => {
