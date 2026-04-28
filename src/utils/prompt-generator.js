@@ -317,6 +317,21 @@ export function generateMasterPrompt(designs, project) {
     s.push('');
   }
 
+  // Aggregate Project Assets
+  const projectAssets = designs.filter(d => d.componentType === 'project-asset');
+  if (projectAssets.length > 0) {
+    s.push('### 🖼️ FINALIZED BRAND ASSETS & ILLUSTRATIONS');
+    s.push('The following assets have been generated and approved for this project. You MUST integrate these assets into the UI code (e.g., as hero illustrations, background textures, or avatar placeholders) using the context provided:');
+    projectAssets.forEach((a, i) => {
+      s.push(`${i + 1}. **Asset**: "${a.title}"`);
+      if (a.notes) s.push(`   - **Usage Context**: ${a.notes}`);
+      if (a.url) s.push(`   - **URL/Source**: \`${a.url}\``);
+    });
+    s.push('');
+    s.push('> IMPORTANT: Do not use generic placeholders like "image.jpg" if an asset above fits the context. Use the specific context and URLs provided above.');
+    s.push('');
+  }
+
   s.push('---');
   s.push('## FINAL OUTPUT');
   s.push('');

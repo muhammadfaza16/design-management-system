@@ -29,7 +29,8 @@ export function fileToBase64(file) {
 }
 export const COMPONENT_TYPES = [
   'hero', 'navbar', 'footer', 'card', 'pricing', 'dashboard',
-  'form', 'landing', 'sidebar', 'modal', 'table', 'profile', 'settings', 'checkout', 'blog', 'portfolio', 'other'
+  'form', 'landing', 'sidebar', 'modal', 'table', 'profile', 'settings', 'checkout', 'blog', 'portfolio', 
+  'illustration', 'iconography', '3d-asset', 'project-asset', 'other'
 ];
 export const STYLE_TAGS = [
   'glassmorphism', 'dark-mode', 'minimalist', 'brutalist', 'gradient',

@@ -2,6 +2,7 @@
 import JSZip from 'jszip';
 import { getProject, updateProject, deleteProject, getAllDesigns, getDesign } from '../db/store.js';
 import { generateMasterPrompt } from '../utils/prompt-generator.js';
+import { generateAssetPrompt } from '../utils/asset-prompt-engine.js';
 import { copyToClipboard } from '../utils/export.js';
 import { showToast } from '../components/toast.js';
 import { openProjectModal } from '../pages/projects.js';
@@ -34,7 +35,13 @@ export async function renderProjectBoard(container, navigate, params) {
     development: []
   };
 
-  projectDesigns.forEach(d => {
+  const assetTypes = ['illustration', 'iconography', '3d-asset', 'project-asset'];
+  const projectAssets = projectDesigns.filter(d => assetTypes.includes(d.componentType));
+  const kanbanDesigns = projectDesigns.filter(d => !assetTypes.includes(d.componentType));
+
+  project.populatedDesigns = projectDesigns; // Attach for the prompt engine
+
+  kanbanDesigns.forEach(d => {
     const status = project.designStatuses[d.id] || 'inspiration';
     if (columns[status]) columns[status].push(d);
     else columns.inspiration.push(d);
@@ -127,6 +134,51 @@ export async function renderProjectBoard(container, navigate, params) {
         </div>
       </div>
 
+      <div class="section-container" style="margin-top:var(--space-12); background:var(--bg-surface); padding: 24px; border-radius: var(--radius-xl); border: 1px solid rgba(var(--text-rgb),0.05)">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 24px;">
+          <div class="section-title" style="margin-bottom:0">🎨 Brand Assets & Illustrations</div>
+        </div>
+
+        <div style="display:flex; gap: 24px; flex-wrap: wrap;">
+          <!-- Generator Panel -->
+          <div style="flex:1; min-width: 300px; background: var(--bg-base); padding: 20px; border-radius: var(--radius-lg); border: 1px solid rgba(var(--text-rgb),0.06);">
+            <div style="font-weight: 600; font-size: 14px; margin-bottom: 12px;">Asset Prompt Generator</div>
+            <p style="font-size: 12px; color: var(--text-secondary); margin-bottom: 16px;">Generate Midjourney prompts perfectly synced with this project's aesthetic DNA.</p>
+            <input type="text" id="asset-subject-input" class="form-control" placeholder="e.g. A friendly mascot holding a laptop..." style="margin-bottom: 12px;" />
+            <button class="btn btn-primary" id="btn-generate-asset-prompt" style="width:100%; justify-content:center;">Generate Prompt</button>
+            <div id="asset-prompt-result" style="display:none; margin-top: 16px;">
+              <textarea class="form-control" id="asset-prompt-text" rows="4" readonly style="font-family: var(--font-mono); font-size: 11px; background: rgba(0,0,0,0.2);"></textarea>
+              <button class="btn btn-secondary" id="btn-copy-asset-prompt" style="width:100%; margin-top: 8px; justify-content:center;">Copy Prompt</button>
+            </div>
+          </div>
+
+          <!-- Asset Library -->
+          <div style="flex:2; min-width: 400px;">
+            <div style="font-weight: 600; font-size: 14px; margin-bottom: 12px; display:flex; justify-content:space-between;">
+              <span>Project Assets</span>
+              <a href="#library" style="font-size: 12px; color: var(--accent);">+ Add from Library</a>
+            </div>
+            ${projectAssets.length === 0 ? `
+              <div class="empty-state" style="padding: 24px;">No assets added yet.</div>
+            ` : `
+              <div class="design-grid" style="grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));">
+                ${projectAssets.map(a => `
+                  <div class="design-card" data-id="${a.id}" style="cursor:pointer;" onclick="window.location.hash='detail?id=${a.id}'">
+                    <div class="design-card__thumb" style="aspect-ratio: 1; background: var(--bg-base);">
+                      ${a.imageData ? `<img src="${a.imageData}" alt="${a.title}" style="object-fit:cover;" />` : `<div style="display:flex;align-items:center;justify-content:center;height:100%;"><span style="font-size:24px">🖼️</span></div>`}
+                    </div>
+                    <div class="design-card__body" style="padding: 12px;">
+                      <div class="design-card__title truncate" style="font-size:12px;">${a.title}</div>
+                      <div style="font-size:10px; color:var(--text-secondary); margin-top:4px;">${a.componentType}</div>
+                    </div>
+                  </div>
+                `).join('')}
+              </div>
+            `}
+          </div>
+        </div>
+      </div>
+
       <div class="section-container" style="margin-top:var(--space-12)">
         <div class="section-title">Library / Add to Project</div>
         <div id="board-available" style="margin-top:var(--space-4)">
@@ -197,6 +249,32 @@ export async function renderProjectBoard(container, navigate, params) {
       renderProjectBoard(container, navigate, params);
     });
   });
+
+  // Asset Prompt Generator Logic
+  const btnGenerateAsset = $('#btn-generate-asset-prompt');
+  if (btnGenerateAsset) {
+    btnGenerateAsset.addEventListener('click', () => {
+      const subject = $('#asset-subject-input').value.trim();
+      if (!subject) {
+        showToast('Please enter a subject for the illustration.', 'error');
+        return;
+      }
+      
+      const prompt = generateAssetPrompt(subject, project, projectAssets);
+      $('#asset-prompt-text').value = prompt;
+      $('#asset-prompt-result').style.display = 'block';
+    });
+  }
+
+  const btnCopyAsset = $('#btn-copy-asset-prompt');
+  if (btnCopyAsset) {
+    btnCopyAsset.addEventListener('click', () => {
+      const text = $('#asset-prompt-text').value;
+      copyToClipboard(text);
+      btnCopyAsset.textContent = 'Copied!';
+      setTimeout(() => btnCopyAsset.textContent = 'Copy Prompt', 2000);
+    });
+  }
 
   // Export Starter Kit
   $('#board-export-zip').addEventListener('click', async () => {
