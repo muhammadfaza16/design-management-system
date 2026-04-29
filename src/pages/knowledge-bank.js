@@ -75,7 +75,7 @@ export async function renderKnowledgeBank(container, navigate) {
     // Render content
     container.querySelector('#kb-content').innerHTML = `
           ${items.map((k, i) => `
-            <div class="design-card kb-card animate-fade-in-up stagger-${(i % 4) + 1}" style="display:flex;flex-direction:column; background: var(--bg-surface); border: 1px solid rgba(var(--text-rgb), 0.08); transition: all 0.3s ease; overflow: hidden;" data-category="${k.category}">
+            <div class="design-card kb-card animate-fade-in-up hover-lift stagger-${(i % 4) + 1}" style="cursor: pointer; display:flex;flex-direction:column; background: var(--bg-surface); border: 1px solid rgba(var(--text-rgb), 0.08); transition: all 0.3s ease; overflow: hidden;" data-id="${k.id}" data-category="${k.category}">
               
               <!-- Decorative Top Border -->
               <div style="height: 4px; background: linear-gradient(90deg, var(--accent), transparent); width: 100%;"></div>
@@ -120,6 +120,13 @@ export async function renderKnowledgeBank(container, navigate) {
           await copyToClipboard(item.aiPrompt);
           showToast('Directive copied!', 'success');
         }
+      });
+    });
+
+    // Card Click Listener for Navigation
+    container.querySelectorAll('.kb-card').forEach(card => {
+      card.addEventListener('click', () => {
+        navigate('knowledge-detail', { id: card.dataset.id });
       });
     });
   }

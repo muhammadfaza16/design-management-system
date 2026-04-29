@@ -14,6 +14,7 @@ import { renderPromptVault } from './pages/prompt-vault.js';
 import { renderSnippets } from './pages/snippets.js';
 import { renderStylePresets } from './pages/style-presets.js';
 import { renderKnowledgeBank } from './pages/knowledge-bank.js';
+import { renderKnowledgeDetail } from './pages/knowledge-detail.js';
 import { openUploadModal } from './components/upload-modal.js';
 import { initCommandPalette } from './components/command-palette.js';
 
@@ -58,6 +59,9 @@ async function navigate(page, params = {}) {
       break;
     case 'knowledge':
       await renderKnowledgeBank(main, navigate);
+      break;
+    case 'knowledge-detail':
+      await renderKnowledgeDetail(main, navigate, params);
       break;
     case 'snippets':
       await renderSnippets(main, navigate);
