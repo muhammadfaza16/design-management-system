@@ -12,15 +12,6 @@ dist
 dist-ssr
 *.local
 
-# Environment variables
-.env
-.env.*
-!.env.example
-
-# PocketBase data
-backend/pb_data/
-backend/pocketbase.exe
-
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

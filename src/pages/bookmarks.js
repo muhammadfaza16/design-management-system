@@ -32,15 +32,15 @@ export async function renderBookmarks(container, navigate) {
         <div style="margin-bottom: var(--space-10); background: var(--bg-surface); padding: 24px; border-radius: var(--radius-xl); border: 1px solid rgba(var(--text-rgb), 0.08);">
           <label style="font-size:11px;font-weight:700;color:var(--text-secondary);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:12px;display:block">Save New Link</label>
           <div class="bookmark-input-wrap">
-            <input type="url" id="bookmark-url" class="form-control form-control--lg" placeholder="Paste a URL from X, Dribbble..." style="flex:1;" />
-            <button id="bookmark-save" class="btn btn-primary btn--lg">Save Link</button>
+            <input type="url" id="bookmark-url" class="form-control" placeholder="Paste a URL from X, Dribbble, or any website..." style="flex:1; padding: 14px 20px; font-size: 15px;" />
+            <button id="bookmark-save" class="btn btn-primary" style="padding: 0 24px;">Save Link</button>
           </div>
         </div>
 
         <div class="lib-controls" style="margin-bottom:var(--space-6)">
           <div class="section-title" style="margin-bottom:0">Saved Links <span style="font-weight:400;opacity:0.5">(${bookmarks.length})</span></div>
           <div class="lib-search-wrap">
-            <input type="text" id="bookmark-search" class="form-control" placeholder="Search bookmarks..." value="${searchQuery}" />
+            <input type="text" id="bookmark-search" class="form-control" placeholder="Search bookmarks..." value="${searchQuery}" style="padding: 6px 12px; font-size: 13px;" />
           </div>
         </div>
         

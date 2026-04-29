@@ -1,341 +1,452 @@
-import PocketBase from 'pocketbase';
+// DesignVault — IndexedDB Store (v4)
+import { openDB } from 'idb';
 
-export const pb = new PocketBase(import.meta.env.VITE_PB_URL || 'http://127.0.0.1:8090');
+const DB_NAME = 'designvault';
+const DB_VERSION = 4;
 
-// Map PB records to existing DesignVault formats for backwards compatibility
-function mapDesign(record) {
-  if (!record) return null;
-  return {
-    ...record,
-    // Provide a valid URL for the image if it exists
-    imageData: record.image ? pb.files.getUrl(record, record.image) : null,
-    createdAt: new Date(record.created).getTime(),
-    updatedAt: new Date(record.updated).getTime(),
-  };
+let dbPromise;
+
+function getDB() {
+  if (!dbPromise) {
+    dbPromise = openDB(DB_NAME, DB_VERSION, {
+      upgrade(db, oldVersion) {
+        // v1 stores
+        if (!db.objectStoreNames.contains('designs')) {
+          const ds = db.createObjectStore('designs', { keyPath: 'id' });
+          ds.createIndex('createdAt', 'createdAt');
+          ds.createIndex('rating', 'rating');
+        }
+        if (!db.objectStoreNames.contains('projects')) {
+          const ps = db.createObjectStore('projects', { keyPath: 'id' });
+          ps.createIndex('createdAt', 'createdAt');
+        }
+
+        // v2 stores
+        if (!db.objectStoreNames.contains('prompts')) {
+          const pr = db.createObjectStore('prompts', { keyPath: 'id' });
+          pr.createIndex('createdAt', 'createdAt');
+          pr.createIndex('useCount', 'useCount');
+        }
+        if (!db.objectStoreNames.contains('styles')) {
+          const st = db.createObjectStore('styles', { keyPath: 'id' });
+          st.createIndex('createdAt', 'createdAt');
+        }
+        if (!db.objectStoreNames.contains('snippets')) {
+          const sn = db.createObjectStore('snippets', { keyPath: 'id' });
+          sn.createIndex('createdAt', 'createdAt');
+          sn.createIndex('language', 'language');
+        }
+
+        // v3 stores
+        if (!db.objectStoreNames.contains('project_folders')) {
+          const pf = db.createObjectStore('project_folders', { keyPath: 'id' });
+          pf.createIndex('createdAt', 'createdAt');
+        }
+
+        // v4 stores
+        if (!db.objectStoreNames.contains('bookmarks')) {
+          const bm = db.createObjectStore('bookmarks', { keyPath: 'id' });
+          bm.createIndex('createdAt', 'createdAt');
+        }
+      },
+    });
+  }
+  return dbPromise;
 }
 
-function mapProject(record) {
-  if (!record) return null;
-  return {
-    ...record,
-    createdAt: new Date(record.created).getTime(),
-    updatedAt: new Date(record.updated).getTime(),
-  };
-}
-
-function mapFolder(record) {
-  if (!record) return null;
-  return {
-    ...record,
-    createdAt: new Date(record.created).getTime(),
-  };
-}
-
-function mapBookmark(record) {
-  if (!record) return null;
-  return {
-    ...record,
-    createdAt: new Date(record.created).getTime(),
-  };
+// ---- Helpers ----
+function genId() {
+  return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
 }
 
 // ==========================================
 // DESIGNS CRUD
 // ==========================================
 export async function addDesign(data) {
-  // If we have base64 imageData, we need to convert it to a File object for PB
-  const formData = new FormData();
-  formData.append('title', data.title || 'Untitled');
-  if (data.url) formData.append('url', data.url);
-  if (data.notes) formData.append('notes', data.notes);
-  if (data.componentType) formData.append('componentType', data.componentType);
-  if (data.rating) formData.append('rating', data.rating);
-  
-  if (data.tags) formData.append('tags', JSON.stringify(data.tags));
-  if (data.colors) formData.append('colors', JSON.stringify(data.colors));
-  if (data.palette) formData.append('palette', JSON.stringify(data.palette));
-  if (data.knowledgeInjections) formData.append('knowledgeInjections', JSON.stringify(data.knowledgeInjections));
-  if (data.aestheticFeatures) formData.append('aestheticFeatures', JSON.stringify(data.aestheticFeatures));
-  if (data.aestheticVibes) formData.append('aestheticVibes', JSON.stringify(data.aestheticVibes));
-  if (data.specialSauceNote) formData.append('specialSauceNote', data.specialSauceNote);
-
-  if (data.imageData && data.imageData.startsWith('data:image')) {
-    const res = await fetch(data.imageData);
-    const blob = await res.blob();
-    // Guess extension
-    const ext = blob.type.split('/')[1] || 'png';
-    formData.append('image', blob, `design.${ext}`);
-  }
-
-  const record = await pb.collection('designs').create(formData);
-  return mapDesign(record);
+  const db = await getDB();
+  const design = {
+    id: genId(),
+    title: data.title || 'Untitled',
+    url: data.url || '',
+    notes: data.notes || '',
+    tags: data.tags || [],
+    componentType: data.componentType || '',
+    colors: data.colors || [],
+    rating: data.rating || 0,
+    prompt: data.prompt || '',
+    promptVersions: [],
+    imageData: data.imageData || null,
+    createdAt: Date.now(),
+    updatedAt: Date.now(),
+  };
+  await db.put('designs', design);
+  return design;
 }
 
 export async function updateDesign(id, updates) {
-  const formData = new FormData();
-  for (const key of Object.keys(updates)) {
-    if (key === 'imageData') continue; // Handled below
-    if (key === 'createdAt' || key === 'updatedAt' || key === 'id') continue;
-    
-    if (typeof updates[key] === 'object' && updates[key] !== null) {
-      formData.append(key, JSON.stringify(updates[key]));
-    } else {
-      formData.append(key, updates[key]);
-    }
-  }
-
-  if (updates.imageData && updates.imageData.startsWith('data:image')) {
-    const res = await fetch(updates.imageData);
-    const blob = await res.blob();
-    const ext = blob.type.split('/')[1] || 'png';
-    formData.append('image', blob, `design.${ext}`);
-  }
-
-  const record = await pb.collection('designs').update(id, formData);
-  return mapDesign(record);
+  const db = await getDB();
+  const design = await db.get('designs', id);
+  if (!design) return null;
+  const updated = { ...design, ...updates, updatedAt: Date.now() };
+  await db.put('designs', updated);
+  return updated;
 }
 
 export async function deleteDesign(id) {
-  await pb.collection('designs').delete(id);
+  const db = await getDB();
+  await db.delete('designs', id);
 }
 
 export async function getDesign(id) {
-  try {
-    const record = await pb.collection('designs').getOne(id);
-    return mapDesign(record);
-  } catch (e) {
-    return null;
-  }
+  const db = await getDB();
+  return db.get('designs', id);
 }
 
 export async function getAllDesigns() {
-  try {
-    const records = await pb.collection('designs').getFullList({
-      sort: '-created',
-    });
-    return records.map(mapDesign);
-  } catch(e) { return []; }
+  const db = await getDB();
+  const all = await db.getAll('designs');
+  return all.sort((a, b) => b.createdAt - a.createdAt);
 }
 
 export async function getDesignCount() {
-  try {
-    const list = await pb.collection('designs').getList(1, 1);
-    return list.totalItems;
-  } catch(e) { return 0; }
+  const db = await getDB();
+  return (await db.getAll('designs')).length;
 }
 
 // ==========================================
 // PROJECTS CRUD
 // ==========================================
 export async function addProject(data) {
-  const record = await pb.collection('projects').create({
+  const db = await getDB();
+  const project = {
+    id: genId(),
     title: data.title || 'Untitled Project',
     description: data.description || '',
     brief: data.brief || '',
+    status: data.status || 'research',
     folderId: data.folderId || null,
     designIds: data.designIds || [],
     designStatuses: data.designStatuses || {},
     masterPrompt: data.masterPrompt || '',
-  });
-  return mapProject(record);
+    createdAt: Date.now(),
+    updatedAt: Date.now(),
+  };
+  await db.put('projects', project);
+  return project;
 }
 
 export async function updateProject(id, updates) {
-  const cleanUpdates = { ...updates };
-  delete cleanUpdates.id;
-  delete cleanUpdates.createdAt;
-  delete cleanUpdates.updatedAt;
-  
-  const record = await pb.collection('projects').update(id, cleanUpdates);
-  return mapProject(record);
+  const db = await getDB();
+  const proj = await db.get('projects', id);
+  if (!proj) return null;
+  const updated = { ...proj, ...updates, updatedAt: Date.now() };
+  await db.put('projects', updated);
+  return updated;
 }
 
 export async function deleteProject(id) {
-  await pb.collection('projects').delete(id);
+  const db = await getDB();
+  await db.delete('projects', id);
 }
 
 export async function getProject(id) {
-  try {
-    const record = await pb.collection('projects').getOne(id);
-    return mapProject(record);
-  } catch(e) { return null; }
+  const db = await getDB();
+  return db.get('projects', id);
 }
 
 export async function getAllProjects() {
-  try {
-    const records = await pb.collection('projects').getFullList({ sort: '-created' });
-    return records.map(mapProject);
-  } catch(e) { return []; }
+  const db = await getDB();
+  const all = await db.getAll('projects');
+  return all.sort((a, b) => b.createdAt - a.createdAt);
 }
 
 export async function getProjectCount() {
-  try {
-    const list = await pb.collection('projects').getList(1, 1);
-    return list.totalItems;
-  } catch(e) { return 0; }
+  const db = await getDB();
+  return (await db.getAll('projects')).length;
 }
 
 // ==========================================
 // PROJECT FOLDERS CRUD
 // ==========================================
 export async function addProjectFolder(data) {
-  const record = await pb.collection('project_folders').create({
+  const db = await getDB();
+  const folder = {
+    id: genId(),
     name: data.name || 'New Folder',
-    color: data.color || '#3b82f6',
-  });
-  return mapFolder(record);
+    color: data.color || 'var(--bg-card)',
+    createdAt: Date.now(),
+  };
+  await db.put('project_folders', folder);
+  return folder;
 }
 
 export async function updateProjectFolder(id, updates) {
-  const cleanUpdates = { ...updates };
-  delete cleanUpdates.id;
-  delete cleanUpdates.createdAt;
-  const record = await pb.collection('project_folders').update(id, cleanUpdates);
-  return mapFolder(record);
+  const db = await getDB();
+  const f = await db.get('project_folders', id);
+  if (!f) return null;
+  const updated = { ...f, ...updates };
+  await db.put('project_folders', updated);
+  return updated;
 }
 
 export async function deleteProjectFolder(id) {
-  // Cascading relation clear
-  try {
-    const projects = await pb.collection('projects').getFullList({ filter: `folderId="${id}"` });
-    for (const p of projects) {
-      await pb.collection('projects').update(p.id, { folderId: null });
+  const db = await getDB();
+  // We should ideally remove this folderId from all projects that have it
+  const tx = db.transaction(['project_folders', 'projects'], 'readwrite');
+  await tx.objectStore('project_folders').delete(id);
+  const projectsStore = tx.objectStore('projects');
+  const allProjects = await projectsStore.getAll();
+  for (const p of allProjects) {
+    if (p.folderId === id) {
+      p.folderId = null;
+      p.updatedAt = Date.now();
+      await projectsStore.put(p);
     }
-  } catch(e) {}
-  await pb.collection('project_folders').delete(id);
+  }
+  await tx.done;
 }
 
 export async function getAllProjectFolders() {
-  try {
-    const records = await pb.collection('project_folders').getFullList({ sort: 'created' });
-    return records.map(mapFolder);
-  } catch(e) { return []; }
+  const db = await getDB();
+  const all = await db.getAll('project_folders');
+  return all.sort((a, b) => a.createdAt - b.createdAt); // oldest first looks better for folders
+}
+
+// ==========================================
+// PROMPTS CRUD (Prompt Vault)
+// ==========================================
+export async function addPrompt(data) {
+  const db = await getDB();
+  const prompt = {
+    id: genId(),
+    title: data.title || 'Untitled Prompt',
+    content: data.content || '',
+    category: data.category || 'general',
+    framework: data.framework || '',
+    tags: data.tags || [],
+    rating: data.rating || 0,
+    useCount: data.useCount || 0,
+    isFavorite: false,
+    createdAt: Date.now(),
+    updatedAt: Date.now(),
+  };
+  await db.put('prompts', prompt);
+  return prompt;
+}
+
+export async function updatePrompt(id, updates) {
+  const db = await getDB();
+  const p = await db.get('prompts', id);
+  if (!p) return null;
+  const updated = { ...p, ...updates, updatedAt: Date.now() };
+  await db.put('prompts', updated);
+  return updated;
+}
+
+export async function deletePrompt(id) {
+  const db = await getDB();
+  await db.delete('prompts', id);
+}
+
+export async function getPrompt(id) {
+  const db = await getDB();
+  return db.get('prompts', id);
+}
+
+export async function getAllPrompts() {
+  const db = await getDB();
+  const all = await db.getAll('prompts');
+  return all.sort((a, b) => b.createdAt - a.createdAt);
+}
+
+export async function incrementPromptUse(id) {
+  const db = await getDB();
+  const p = await db.get('prompts', id);
+  if (!p) return null;
+  p.useCount = (p.useCount || 0) + 1;
+  p.updatedAt = Date.now();
+  await db.put('prompts', p);
+  return p;
+}
+
+// ==========================================
+// STYLE PRESETS CRUD
+// ==========================================
+export async function addStylePreset(data) {
+  const db = await getDB();
+  const style = {
+    id: genId(),
+    name: data.name || 'Untitled Style',
+    description: data.description || '',
+    tokens: {
+      colors: data.tokens?.colors || [],
+      fonts: data.tokens?.fonts || [],
+      radius: data.tokens?.radius || '',
+      spacing: data.tokens?.spacing || '',
+    },
+    tags: data.tags || [],
+    createdAt: Date.now(),
+    updatedAt: Date.now(),
+  };
+  await db.put('styles', style);
+  return style;
+}
+
+export async function updateStylePreset(id, updates) {
+  const db = await getDB();
+  const s = await db.get('styles', id);
+  if (!s) return null;
+  const updated = { ...s, ...updates, updatedAt: Date.now() };
+  await db.put('styles', updated);
+  return updated;
+}
+
+export async function deleteStylePreset(id) {
+  const db = await getDB();
+  await db.delete('styles', id);
+}
+
+export async function getAllStylePresets() {
+  const db = await getDB();
+  const all = await db.getAll('styles');
+  return all.sort((a, b) => b.createdAt - a.createdAt);
+}
+
+// ==========================================
+// SNIPPETS CRUD
+// ==========================================
+export async function addSnippet(data) {
+  const db = await getDB();
+  const snippet = {
+    id: genId(),
+    title: data.title || 'Untitled Snippet',
+    code: data.code || '',
+    language: data.language || 'javascript',
+    framework: data.framework || '',
+    tags: data.tags || [],
+    description: data.description || '',
+    useCount: data.useCount || 0,
+    createdAt: Date.now(),
+    updatedAt: Date.now(),
+  };
+  await db.put('snippets', snippet);
+  return snippet;
+}
+
+export async function updateSnippet(id, updates) {
+  const db = await getDB();
+  const s = await db.get('snippets', id);
+  if (!s) return null;
+  const updated = { ...s, ...updates, updatedAt: Date.now() };
+  await db.put('snippets', updated);
+  return updated;
+}
+
+export async function deleteSnippet(id) {
+  const db = await getDB();
+  await db.delete('snippets', id);
+}
+
+export async function getAllSnippets() {
+  const db = await getDB();
+  const all = await db.getAll('snippets');
+  return all.sort((a, b) => b.createdAt - a.createdAt);
 }
 
 // ==========================================
 // BOOKMARKS CRUD
 // ==========================================
 export async function addBookmark(data) {
-  const record = await pb.collection('bookmarks').create({
+  const db = await getDB();
+  const bookmark = {
+    id: genId(),
     url: data.url,
     title: data.title || '',
     description: data.description || '',
     image: data.image || '',
     logo: data.logo || '',
     publisher: data.publisher || '',
-    tags: data.tags || [],
-  });
-  return mapBookmark(record);
-}
-
-export async function updateBookmark(id, updates) {
-  const cleanUpdates = { ...updates };
-  delete cleanUpdates.id;
-  delete cleanUpdates.createdAt;
-  const record = await pb.collection('bookmarks').update(id, cleanUpdates);
-  return mapBookmark(record);
+    createdAt: Date.now(),
+  };
+  await db.put('bookmarks', bookmark);
+  return bookmark;
 }
 
 export async function deleteBookmark(id) {
-  await pb.collection('bookmarks').delete(id);
+  const db = await getDB();
+  await db.delete('bookmarks', id);
 }
 
 export async function getAllBookmarks() {
-  try {
-    const records = await pb.collection('bookmarks').getFullList({ sort: '-created' });
-    return records.map(mapBookmark);
-  } catch(e) { return []; }
+  const db = await getDB();
+  const all = await db.getAll('bookmarks');
+  return all.sort((a, b) => b.createdAt - a.createdAt);
+}
+
+export async function incrementSnippetUse(id) {
+  const db = await getDB();
+  const s = await db.get('snippets', id);
+  if (!s) return null;
+  s.useCount = (s.useCount || 0) + 1;
+  s.updatedAt = Date.now();
+  await db.put('snippets', s);
+  return s;
 }
 
 // ==========================================
-// DUMMY IMPLEMENTATIONS (for missing tables)
+// SEARCH & FILTER
 // ==========================================
-export async function getStats() {
-  const [designs, projects, bookmarks] = await Promise.all([
-    getAllDesigns(),
-    getAllProjects(),
-    getAllBookmarks(),
+export async function searchDesigns(query = '', filters = {}) {
+  const all = await getAllDesigns();
+  return all.filter(d => {
+    const q = query.toLowerCase();
+    const tagMatch = d.tags && d.tags.some(t => t.toLowerCase().includes(q));
+    const typeMatch = d.componentType && d.componentType.toLowerCase().includes(q);
+    const matchesQuery = !q || d.title.toLowerCase().includes(q) || (d.notes && d.notes.toLowerCase().includes(q)) || (d.url && d.url.toLowerCase().includes(q)) || tagMatch || typeMatch;
+    const matchesTag = !filters.tag || (d.tags && d.tags.includes(filters.tag));
+    const matchesComponent = !filters.componentType || d.componentType === filters.componentType;
+    const matchesRating = !filters.minRating || d.rating >= filters.minRating;
+    const matchesFeature = !filters.aestheticFeature || (d.aestheticFeatures && d.aestheticFeatures.includes(filters.aestheticFeature));
+    const matchesVibe = !filters.aestheticVibe || (d.aestheticVibes && d.aestheticVibes.includes(filters.aestheticVibe));
+    
+    return matchesQuery && matchesTag && matchesComponent && matchesRating && matchesFeature && matchesVibe;
+  });
+}
+
+export async function searchAll(query = '') {
+  if (!query) return { designs: [], prompts: [], snippets: [], projects: [] };
+  const q = query.toLowerCase();
+  const [designs, prompts, snippets, projects] = await Promise.all([
+    getAllDesigns(), getAllPrompts(), getAllSnippets(), getAllProjects()
   ]);
-
-  // Compute top tags
-  const tagMap = {};
-  for (const d of designs) {
-    if (d.tags && Array.isArray(d.tags)) {
-      for (const t of d.tags) {
-        tagMap[t] = (tagMap[t] || 0) + 1;
-      }
-    }
-  }
-  const topTags = Object.entries(tagMap)
-    .map(([tag, count]) => ({ tag, count }))
-    .sort((a, b) => b.count - a.count)
-    .slice(0, 12);
-
   return {
-    totalDesigns: designs.length,
-    totalProjects: projects.length,
-    totalBookmarks: bookmarks.length,
-    totalTags: Object.keys(tagMap).length,
-    totalPrompts: 0,
-    recentDesigns: designs.slice(0, 5),
-    recentProjects: projects.slice(0, 5),
-    topTags,
+    designs: designs.filter(d => d.title.toLowerCase().includes(q) || (d.tags && d.tags.some(t => t.toLowerCase().includes(q))) || (d.componentType && d.componentType.toLowerCase().includes(q))).slice(0, 5),
+    prompts: prompts.filter(p => p.title.toLowerCase().includes(q) || p.content.toLowerCase().includes(q)).slice(0, 5),
+    snippets: snippets.filter(s => s.title.toLowerCase().includes(q) || s.code.toLowerCase().includes(q)).slice(0, 5),
+    projects: projects.filter(p => p.title.toLowerCase().includes(q)).slice(0, 5),
   };
 }
 
-export async function getAllSnippets() { return []; }
-export async function getAllStyles() { return []; }
-export async function getAllPrompts() { return []; }
-export async function addPrompt(data) { return null; }
-export async function updatePrompt(id, updates) { return null; }
-export async function deletePrompt(id) {}
-export async function incrementPromptUse(id) {}
-
-export async function addSnippet(data) { return null; }
-export async function updateSnippet(id, updates) { return null; }
-export async function deleteSnippet(id) {}
-
-export async function incrementSnippetUse(id) {}
-
-export async function getAllStylePresets() { return []; }
-export async function addStylePreset(data) { return null; }
-export async function updateStylePreset(id, updates) { return null; }
-export async function deleteStylePreset(id) {}
-
-export async function searchAll(query) {
-  const q = query.toLowerCase();
-  const designs = await getAllDesigns();
-  const projects = await getAllProjects();
-  
-  return [
-    ...designs.filter(d => d.title.toLowerCase().includes(q)).map(d => ({ ...d, type: 'design' })),
-    ...projects.filter(p => p.title.toLowerCase().includes(q)).map(p => ({ ...p, type: 'project' }))
-  ];
-}
-export async function searchDesigns(query, filters = {}) {
-  const designs = await getAllDesigns();
-  let result = designs;
-
-  if (query) {
-    const q = query.toLowerCase();
-    result = result.filter(d => 
-      (d.title && d.title.toLowerCase().includes(q)) || 
-      (d.tags && d.tags.some(t => t.toLowerCase().includes(q))) ||
-      (d.notes && d.notes.toLowerCase().includes(q))
-    );
-  }
-
-  if (filters.componentType && filters.componentType !== 'all') {
-    result = result.filter(d => d.componentType === filters.componentType);
-  }
-
-  if (filters.aestheticFeature && filters.aestheticFeature !== 'all') {
-    result = result.filter(d => d.aestheticFeatures && d.aestheticFeatures.includes(filters.aestheticFeature));
-  }
-
-  if (filters.aestheticVibe && filters.aestheticVibe !== 'all') {
-    result = result.filter(d => d.aestheticVibes && d.aestheticVibes.includes(filters.aestheticVibe));
-  }
-
-  return result;
+// ==========================================
+// STATS
+// ==========================================
+export async function getStats() {
+  const [designs, projects, prompts, snippets, bookmarks] = await Promise.all([
+    getAllDesigns(), getAllProjects(), getAllPrompts(), getAllSnippets(), getAllBookmarks()
+  ]);
+  const allTags = designs.flatMap(d => d.tags);
+  const uniqueTags = [...new Set(allTags)];
+  return {
+    totalDesigns: designs.length,
+    totalProjects: projects.length,
+    totalPrompts: prompts.length,
+    totalSnippets: snippets.length,
+    totalBookmarks: bookmarks.length,
+    totalTags: uniqueTags.length,
+    topTags: uniqueTags.map(t => ({ tag: t, count: allTags.filter(x => x === t).length }))
+      .sort((a, b) => b.count - a.count).slice(0, 10),
+    topPrompts: prompts.sort((a, b) => b.useCount - a.useCount).slice(0, 5),
+    recentDesigns: designs.slice(0, 5),
+    recentProjects: projects.slice(0, 5),
+  };
 }

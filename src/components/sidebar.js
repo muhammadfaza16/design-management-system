@@ -105,23 +105,15 @@ export async function renderSidebar(container, currentPage, navigate) {
       </div>
     </nav>
 
-    <div class="sidebar__footer" style="padding: 20px 16px; border-top: 1px solid rgba(var(--text-rgb),0.06); margin-top: auto; display: flex; flex-direction: column; gap: 12px;">
-      <div style="display: flex; justify-content: space-between; align-items: center;">
-        <div class="sidebar__kbd-hint" style="font-size: 12px;">
-          <kbd>⌘K</kbd> Command Palette
-        </div>
-        <button class="btn-icon" id="theme-toggle" style="width:24px;height:24px;" title="Toggle Theme">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="opacity:0.6">
-            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
-          </svg>
-        </button>
+    <div class="sidebar__footer" style="display:flex; justify-content:space-between; align-items:center;">
+      <div class="sidebar__kbd-hint">
+        <kbd>⌘K</kbd> Command Palette
       </div>
-      <a class="sidebar__link" id="sidebar-logout" style="color: rgba(var(--text-rgb),0.4); cursor: pointer;">
-        <span class="sidebar__link-icon">
-          <img src="/src/assets/icons/misc-brief.svg" class="illustrative-icon" alt="" />
-        </span>
-        Sign Out
-      </a>
+      <button class="btn-icon" id="theme-toggle" style="width:24px;height:24px" title="Toggle Theme">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="opacity:0.6">
+          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+        </svg>
+      </button>
     </div>
   `;
 
