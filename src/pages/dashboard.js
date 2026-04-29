@@ -1,11 +1,16 @@
 // DesignVault — Dashboard Page
-import { getStats, getAllDesigns, getAllProjects, getAllBookmarks } from '../db/store.js';
+import { getStats, getAllDesigns, getAllProjects, getAllBookmarks, getAllPrompts, getAllSnippets, getAllStylePresets } from '../db/store.js';
+import { showToast } from '../components/toast.js';
 import { timeAgo } from '../utils/helpers.js';
 
 export async function renderDashboard(container, navigate) {
-  const stats = await getStats();
+  let isInitialized = false;
 
-  container.innerHTML = `
+  async function load() {
+    const stats = await getStats();
+
+    if (!isInitialized) {
+      container.innerHTML = `
     <div class="page animate-fade-in">
       <div class="page__header">
         <div>
@@ -120,8 +125,139 @@ export async function renderDashboard(container, navigate) {
           </div>
         </div>
       </div>
+
+      <div class="dashboard-grid" id="dash-dynamic-grid"></div>
     </div>
   `;
+
+      // Navigation (static elements only)
+      container.querySelectorAll('[data-nav]').forEach(el => {
+        el.addEventListener('click', () => navigate(el.dataset.nav));
+      });
+
+      // Quick Actions
+      container.querySelector('#qa-add-design')?.addEventListener('click', () => {
+        window.dispatchEvent(new CustomEvent('open-add-design'));
+      });
+      container.querySelector('#qa-new-project')?.addEventListener('click', () => {
+        window.dispatchEvent(new CustomEvent('open-new-project'));
+      });
+
+      // Export Backup (full — all DB stores)
+      container.querySelector('#qa-export')?.addEventListener('click', async () => {
+        const btn = container.querySelector('#qa-export');
+        const originalHTML = btn.innerHTML;
+        btn.innerHTML = '<img src="/assets/icons/action-export.svg" class="illustrative-icon" alt="" /><span>Exporting...</span>';
+        btn.disabled = true;
+        try {
+          const [designs, projects, bookmarks, prompts, snippets, stylePresets] = await Promise.all([
+            getAllDesigns(), getAllProjects(), getAllBookmarks(),
+            getAllPrompts(), getAllSnippets(), getAllStylePresets()
+          ]);
+          const backup = {
+            version: 2,
+            exportedAt: new Date().toISOString(),
+            data: { designs, projects, bookmarks, prompts, snippets, stylePresets }
+          };
+          const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `designvault-backup-${new Date().toISOString().slice(0, 10)}.json`;
+          a.click();
+          URL.revokeObjectURL(url);
+          showToast('Backup exported successfully!', 'success');
+        } catch (err) {
+          console.error('Export failed:', err);
+          showToast('Export failed. Please try again.', 'error');
+        } finally {
+          btn.innerHTML = originalHTML;
+          btn.disabled = false;
+        }
+      });
+
+      isInitialized = true;
+    }
+
+    // --- Dynamic content updates ---
+    const dynamicGrid = container.querySelector('#dash-dynamic-grid');
+    dynamicGrid.innerHTML = `
+      <div class="dashboard-panel">
+        <div class="dashboard-panel__header">
+          <div class="section-title" style="margin:0">Recent References</div>
+          <button class="btn btn-ghost" data-nav="library">View All</button>
+        </div>
+        <div class="dashboard-panel__body">
+          ${stats.recentDesigns.length === 0
+            ? '<div class="text-muted" style="padding:20px">No references yet. Add your first design reference.</div>'
+            : stats.recentDesigns.map(d => `
+              <div class="dashboard-list-item" data-detail="${d.id}">
+                <div class="dashboard-list-item__icon">
+                  ${d.imageData
+                    ? `<img src="${d.imageData}" style="width:100%;height:100%;object-fit:cover;border-radius:6px;filter:none" />`
+                    : `<img src="/assets/icons/misc-camera.svg" class="illustrative-icon" style="opacity:0.2" alt="" />`}
+                </div>
+                <div class="dashboard-list-item__info">
+                  <div class="dashboard-list-item__title">${d.title}</div>
+                  <div class="dashboard-list-item__meta">${d.componentType || 'misc'} · ${timeAgo(d.createdAt)}</div>
+                </div>
+              </div>
+            `).join('')}
+        </div>
+      </div>
+
+      <div class="dashboard-panel">
+        <div class="dashboard-panel__header">
+          <div class="section-title" style="margin:0">Recent Projects</div>
+          <button class="btn btn-ghost" data-nav="projects">View All</button>
+        </div>
+        <div class="dashboard-panel__body">
+          ${stats.recentProjects.length === 0
+            ? '<div class="text-muted" style="padding:20px">No projects yet.</div>'
+            : stats.recentProjects.map(p => `
+              <div class="dashboard-list-item" data-project="${p.id}">
+                <div class="dashboard-list-item__icon">
+                  <img src="/assets/icons/nav-projects.svg" class="illustrative-icon" style="opacity:0.3" alt="" />
+                </div>
+                <div class="dashboard-list-item__info">
+                  <div class="dashboard-list-item__title">${p.title}</div>
+                  <div class="dashboard-list-item__meta">${p.designIds.length} refs · ${timeAgo(p.createdAt)}</div>
+                </div>
+              </div>
+            `).join('')}
+        </div>
+      </div>
+
+      <div class="dashboard-panel">
+        <div class="dashboard-panel__header">
+          <div class="section-title" style="margin:0">Top Tags</div>
+        </div>
+        <div class="dashboard-panel__body" style="padding:20px">
+          ${stats.topTags.length === 0
+            ? '<div class="text-muted">No tags yet.</div>'
+            : `<div style="display:flex;flex-wrap:wrap;gap:8px">
+                ${stats.topTags.map(t => `
+                  <div class="tag-stat">
+                    <span class="tag-stat__name">${t.tag}</span>
+                    <span class="tag-stat__count">${t.count}</span>
+                  </div>
+                `).join('')}
+              </div>`}
+        </div>
+      </div>
+    `;
+
+    // Re-attach dynamic navigation listeners
+    dynamicGrid.querySelectorAll('[data-nav]').forEach(el => {
+      el.addEventListener('click', () => navigate(el.dataset.nav));
+    });
+    dynamicGrid.querySelectorAll('[data-detail]').forEach(el => {
+      el.addEventListener('click', () => navigate('detail', { id: el.dataset.detail }));
+    });
+    dynamicGrid.querySelectorAll('[data-project]').forEach(el => {
+      el.addEventListener('click', () => navigate('project-board', { id: el.dataset.project }));
+    });
+  }
 
   // Navigation
   container.querySelectorAll('[data-nav]').forEach(el => {

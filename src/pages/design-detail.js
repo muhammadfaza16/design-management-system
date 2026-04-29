@@ -4,6 +4,7 @@ import { generatePrompt } from '../utils/prompt-generator.js';
 import { suggestSections, formatSectionsForPrompt } from '../utils/section-suggestions.js';
 import { copyToClipboard, downloadMarkdown } from '../utils/export.js';
 import { showToast } from '../components/toast.js';
+import { showConfirm } from '../components/dialog.js';
 import { openLightbox } from '../components/lightbox.js';
 import { openUploadModal } from '../components/upload-modal.js';
 import { formatDate, getTagColor, extractColorsFromImage } from '../utils/helpers.js';
@@ -324,30 +325,42 @@ export async function renderDesignDetail(container, navigate, params) {
   });
 
   // Tagging
-  const tagInput = $('#tag-input');
-  tagInput.addEventListener('keypress', async (e) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      const val = tagInput.value.trim().toLowerCase().replace(/[^a-z0-9-]/g, '');
-      if (val && !design.tags.includes(val)) {
-        design.tags.push(val);
-        await updateDesign(design.id, { tags: design.tags });
-        showToast('Tag added', 'success');
-        renderDesignDetail(container, navigate, params);
+  function renderTags() {
+    const tagContainer = $('#tag-container');
+    if (!tagContainer) return;
+    
+    const tagsHTML = design.tags.map(t => `<span class="badge badge--${getTagColor(t)} tag-remove" data-tag="${t}" title="Click to remove">${t} ×</span>`).join('');
+    tagContainer.innerHTML = tagsHTML + '<input type="text" id="tag-input" placeholder="Add tag..." />';
+    
+    const tagInput = $('#tag-input');
+    tagInput.addEventListener('keypress', async (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        const val = tagInput.value.trim().toLowerCase().replace(/[^a-z0-9-]/g, '');
+        if (val && !design.tags.includes(val)) {
+          design.tags.push(val);
+          await updateDesign(design.id, { tags: design.tags });
+          showToast('Tag added', 'success');
+          renderTags();
+          setTimeout(() => $('#tag-input').focus(), 0);
+        } else {
+          tagInput.value = '';
+        }
       }
-      tagInput.value = '';
-    }
-  });
-  
-  container.querySelectorAll('.tag-remove').forEach(badge => {
-    badge.addEventListener('click', async () => {
-      const t = badge.dataset.tag;
-      design.tags = design.tags.filter(tag => tag !== t);
-      await updateDesign(design.id, { tags: design.tags });
-      showToast('Tag removed', 'info');
-      renderDesignDetail(container, navigate, params);
     });
-  });
+
+    container.querySelectorAll('.tag-remove').forEach(badge => {
+      badge.addEventListener('click', async () => {
+        const t = badge.dataset.tag;
+        design.tags = design.tags.filter(tag => tag !== t);
+        await updateDesign(design.id, { tags: design.tags });
+        showToast('Tag removed', 'info');
+        renderTags();
+      });
+    });
+  }
+
+  renderTags();
 
   // Actions
   const copyPromptText = async () => {
@@ -594,7 +607,8 @@ export async function renderDesignDetail(container, navigate, params) {
 
   // Delete
   $('#detail-delete').addEventListener('click', async () => {
-    if (confirm(`Delete "${design.title}"? This cannot be undone.`)) {
+    const ok = await showConfirm(`"${design.title}" will be permanently deleted.`, { title: 'Delete Design?', confirmLabel: 'Delete', danger: true });
+    if (ok) {
       await deleteDesign(design.id);
       showToast('Design deleted', 'info');
       navigate('library');

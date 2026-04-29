@@ -1,6 +1,7 @@
 // DesignVault — Projects Page
 import { getAllProjects, addProject, updateProject, deleteProject, getAllProjectFolders, addProjectFolder } from '../db/store.js';
 import { showToast } from '../components/toast.js';
+import { showPrompt, showConfirm } from '../components/dialog.js';
 import { timeAgo } from '../utils/helpers.js';
 
 let currentFolderId = 'all';
@@ -63,11 +64,15 @@ export async function renderProjects(container, navigate) {
 
     // Folder Add Listener (Since tabs are re-rendered)
     container.querySelector('#folder-add').addEventListener('click', async () => {
-      const name = prompt('Folder Name (e.g. Landing Pages):');
-      if (!name) return;
+      const result = await showPrompt({
+        title: 'New Folder',
+        confirmLabel: 'Create Folder',
+        fields: [{ id: 'name', label: 'Folder Name', placeholder: 'e.g. Landing Pages', required: true }]
+      });
+      if (!result) return;
       const colors = ['#8b5cf6', '#10b981', '#d97706', '#ec4899', '#3b82f6', '#f43f5e', '#14b8a6'];
       const color = colors[Math.floor(Math.random() * colors.length)];
-      const folder = await addProjectFolder({ name, color });
+      const folder = await addProjectFolder({ name: result.name, color });
       currentFolderId = folder.id;
       showToast('Folder created', 'success');
       load();
@@ -172,7 +177,8 @@ export async function renderProjects(container, navigate) {
     container.querySelectorAll('.proj-delete').forEach(btn => {
       btn.addEventListener('click', async (e) => {
         e.stopPropagation();
-        if (confirm('Delete this project? This action cannot be undone.')) {
+        const ok = await showConfirm('This project will be permanently deleted.', { title: 'Delete Project?', confirmLabel: 'Delete', danger: true });
+        if (ok) {
           await deleteProject(btn.dataset.id);
           showToast('Project deleted', 'info');
           load();

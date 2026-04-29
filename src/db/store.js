@@ -377,6 +377,15 @@ export async function deleteBookmark(id) {
   await db.delete('bookmarks', id);
 }
 
+export async function updateBookmark(id, updates) {
+  const db = await getDB();
+  const b = await db.get('bookmarks', id);
+  if (!b) return null;
+  const updated = { ...b, ...updates, updatedAt: Date.now() };
+  await db.put('bookmarks', updated);
+  return updated;
+}
+
 export async function getAllBookmarks() {
   const db = await getDB();
   const all = await db.getAll('bookmarks');

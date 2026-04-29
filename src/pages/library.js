@@ -3,6 +3,7 @@ import { searchDesigns, deleteDesign, getAllProjects, updateDesign, updateProjec
 import { timeAgo, getTagColor, debounce, COMPONENT_TYPES } from '../utils/helpers.js';
 import { openUploadModal } from '../components/upload-modal.js';
 import { showToast } from '../components/toast.js';
+import { showConfirm } from '../components/dialog.js';
 import { generatePrompt } from '../utils/prompt-generator.js';
 import { copyToClipboard } from '../utils/export.js';
 
@@ -311,7 +312,8 @@ export async function renderLibrary(container, navigate) {
     const bulkDeleteBtn = container.querySelector('#bulk-delete');
     if (bulkDeleteBtn) {
       bulkDeleteBtn.addEventListener('click', async () => {
-        if (confirm(`Delete ${selectedIds.size} designs? This cannot be undone.`)) {
+        const ok = await showConfirm(`${selectedIds.size} designs will be permanently deleted.`, { title: `Delete ${selectedIds.size} Designs?`, confirmLabel: 'Delete All', danger: true });
+        if (ok) {
           for (const id of selectedIds) {
             await deleteDesign(id);
           }
@@ -350,7 +352,8 @@ export async function renderLibrary(container, navigate) {
     container.querySelectorAll('.table-delete').forEach(btn => {
       btn.addEventListener('click', async (e) => {
         e.stopPropagation();
-        if (confirm('Delete this design?')) {
+        const ok = await showConfirm('This design will be permanently deleted.', { title: 'Delete Design?', confirmLabel: 'Delete', danger: true });
+        if (ok) {
           await deleteDesign(btn.dataset.id);
           showToast('Deleted');
           render();
