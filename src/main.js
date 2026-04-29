@@ -14,8 +14,10 @@ import { renderPromptVault } from './pages/prompt-vault.js';
 import { renderSnippets } from './pages/snippets.js';
 import { renderStylePresets } from './pages/style-presets.js';
 import { renderKnowledgeBank } from './pages/knowledge-bank.js';
+import { renderLogin } from './pages/login.js';
 import { openUploadModal } from './components/upload-modal.js';
 import { initCommandPalette } from './components/command-palette.js';
+import { pb } from './db/store.js';
 
 const sidebar = document.getElementById('sidebar');
 const main = document.getElementById('main-content');
@@ -24,6 +26,21 @@ let currentPage = 'dashboard';
 let currentParams = {};
 
 async function navigate(page, params = {}) {
+  // --- AUTH GUARD ---
+  if (!pb.authStore.isValid) {
+    sidebar.style.display = 'none';
+    document.body.classList.remove('sidebar-open');
+    await renderLogin(document.body, navigate);
+    return;
+  }
+  
+  // Ensure layout is visible after login
+  sidebar.style.display = 'flex';
+  if (document.body.querySelector('.login-page')) {
+    // Already logged in, restore main layout
+    window.location.reload();
+  }
+
   currentPage = page;
   currentParams = params;
 
@@ -113,8 +130,16 @@ window.addEventListener('toggle-theme', () => {
   }
 });
 
-// Init command palette
+// Init Command Palette
 initCommandPalette(navigate);
 
-// Start
-navigate('dashboard');
+// Initial route
+const path = window.location.pathname.replace(/^\/+/, '');
+navigate(path || 'dashboard');
+
+// Auth state listener for logout
+pb.authStore.onChange((token, model) => {
+  if (!token) {
+    window.location.reload();
+  }
+});

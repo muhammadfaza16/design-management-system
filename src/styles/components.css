@@ -383,6 +383,10 @@
   transition: border-color 0.15s, background 0.15s;
   outline: none;
 }
+.form-control--lg {
+  padding: 14px 20px;
+  font-size: 15px;
+}
 .form-control:focus,
 .modal input:focus, .modal select:focus, .modal textarea:focus {
   border-color: rgba(var(--text-rgb),0.2);
@@ -1075,7 +1079,11 @@
     flex-direction: column;
   }
   .bookmark-input-wrap .btn {
-    width: 100%; padding: 14px 20px;
+    width: 100%;
+  }
+
+  .form-control, .modal input, .modal select, .modal textarea {
+    min-height: 44px;
   }
 
   .stat-card__value {
