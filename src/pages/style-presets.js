@@ -112,19 +112,20 @@ export async function renderStylePresets(container, navigate) {
         const s = presets.find(x => x.id === btn.dataset.id);
         if (!s) return;
 
+        const prefix = s.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
         let css = ':root {\n';
         if (s.tokens.colors) {
           s.tokens.colors.forEach((c, i) => {
-            css += `  --color-${i + 1}: ${c};\n`;
+            css += `  --${prefix}-color-${i + 1}: ${c};\n`;
           });
         }
         if (s.tokens.fonts) {
           s.tokens.fonts.forEach((f, i) => {
-            css += `  --font-${i === 0 ? 'primary' : 'secondary'}: '${f}', sans-serif;\n`;
+            css += `  --${prefix}-font-${i === 0 ? 'primary' : 'secondary'}: '${f}', sans-serif;\n`;
           });
         }
         if (s.tokens.radius) {
-          css += `  --radius: ${s.tokens.radius};\n`;
+          css += `  --${prefix}-radius: ${s.tokens.radius};\n`;
         }
         css += '}';
 

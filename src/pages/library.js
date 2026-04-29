@@ -74,12 +74,12 @@ export async function renderLibrary(container, navigate) {
               <option value="title" ${sortBy === 'title' ? 'selected' : ''}>A → Z</option>
               <option value="updated" ${sortBy === 'updated' ? 'selected' : ''}>Last Updated</option>
             </select>
-            <select id="lib-dna-filter" class="form-control" style="padding:5px 10px;font-size:12px;min-width:120px;max-width:160px">
+            <!-- <select id="lib-dna-filter" class="form-control" style="padding:5px 10px;font-size:12px;min-width:120px;max-width:160px">
               <option value="">Any DNA Feature</option>
               ${['Typography', 'Color Palette', 'Layout & Grid', 'Shadows & Elevation', 'Micro-interactions', 'Imagery & Illustration', 'Card Anatomy', 'Borders & Shapes', 'Data Viz'].map(f => `
                 <option value="${f}" ${currentFilter.aestheticFeature === f ? 'selected' : ''}>${f}</option>
               `).join('')}
-            </select>
+            </select> -->
             <div class="segmented-control" id="lib-filters">
               <button class="segmented-control__item ${!currentFilter.componentType ? 'active' : ''}" data-filter="">All Types</button>
               ${COMPONENT_TYPES.slice(0, 4).map(t => `<button class="segmented-control__item ${currentFilter.componentType === t ? 'active' : ''}" data-filter="${t}">${t}</button>`).join('')}

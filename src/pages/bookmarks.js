@@ -1,7 +1,7 @@
 // DesignVault — Bookmarks / Inspirations Page
-import { getAllBookmarks, addBookmark, deleteBookmark } from '../db/store.js';
+import { getAllBookmarks, addBookmark, deleteBookmark, updateBookmark } from '../db/store.js';
 import { showToast } from '../components/toast.js';
-import { showConfirm } from '../components/dialog.js';
+import { showConfirm, showPrompt } from '../components/dialog.js';
 import { timeAgo, debounce } from '../utils/helpers.js';
 
 export async function renderBookmarks(container, navigate) {
@@ -154,7 +154,10 @@ export async function renderBookmarks(container, navigate) {
               </p>
               <div style="display:flex; justify-content:space-between; align-items:center; margin-top:16px; border-top:1px solid rgba(var(--text-rgb),0.06); padding-top:16px;">
                 <span style="font-size:11px; color:rgba(var(--text-rgb),0.3); font-weight:600;">${timeAgo(b.createdAt)}</span>
-                <button class="btn btn-ghost btn-danger bookmark-delete" data-id="${b.id}" style="font-size:11px; padding:4px 8px;">Delete</button>
+                <div style="display:flex; gap:4px;">
+                  <button class="btn btn-ghost bookmark-edit" data-id="${b.id}" style="font-size:11px; padding:4px 8px;">Edit</button>
+                  <button class="btn btn-ghost btn-danger bookmark-delete" data-id="${b.id}" style="font-size:11px; padding:4px 8px;">Delete</button>
+                </div>
               </div>
             </div>
           </a>
@@ -171,6 +174,36 @@ export async function renderBookmarks(container, navigate) {
         if (ok) {
           await deleteBookmark(btn.dataset.id);
           showToast('Bookmark deleted', 'info');
+          load();
+        }
+      });
+    });
+
+    // Reattach Edit Listeners
+    container.querySelectorAll('.bookmark-edit').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const bookmark = bookmarks.find(b => b.id === btn.dataset.id);
+        if (!bookmark) return;
+
+        const result = await showPrompt({
+          title: 'Edit Bookmark Metadata',
+          confirmLabel: 'Save Changes',
+          fields: [
+            { id: 'title', label: 'Title', value: bookmark.title, placeholder: 'Bookmark title' },
+            { id: 'publisher', label: 'Publisher', value: bookmark.publisher, placeholder: 'e.g. Dribbble, X' },
+            { id: 'description', label: 'Description', type: 'textarea', value: bookmark.description, placeholder: 'Short description or notes' }
+          ]
+        });
+
+        if (result) {
+          await updateBookmark(bookmark.id, {
+            title: result.title,
+            publisher: result.publisher,
+            description: result.description
+          });
+          showToast('Bookmark updated', 'success');
           load();
         }
       });
