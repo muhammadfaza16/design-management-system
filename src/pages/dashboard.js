@@ -259,45 +259,5 @@ export async function renderDashboard(container, navigate) {
     });
   }
 
-  // Navigation
-  container.querySelectorAll('[data-nav]').forEach(el => {
-    el.addEventListener('click', () => navigate(el.dataset.nav));
-  });
-  container.querySelectorAll('[data-detail]').forEach(el => {
-    el.addEventListener('click', () => navigate('detail', { id: el.dataset.detail }));
-  });
-  container.querySelectorAll('[data-project]').forEach(el => {
-    el.addEventListener('click', () => navigate('project-board', { id: el.dataset.project }));
-  });
-
-  // Quick Actions
-  container.querySelector('#qa-add-design')?.addEventListener('click', () => {
-    window.dispatchEvent(new CustomEvent('open-add-design'));
-  });
-  container.querySelector('#qa-new-project')?.addEventListener('click', () => {
-    window.dispatchEvent(new CustomEvent('open-new-project'));
-  });
-
-  // Export Backup
-  container.querySelector('#qa-export')?.addEventListener('click', async () => {
-    try {
-      const [designs, projects, bookmarks] = await Promise.all([
-        getAllDesigns(), getAllProjects(), getAllBookmarks()
-      ]);
-      const backup = {
-        version: 1,
-        exportedAt: new Date().toISOString(),
-        data: { designs, projects, bookmarks }
-      };
-      const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `designvault-backup-${new Date().toISOString().slice(0, 10)}.json`;
-      a.click();
-      URL.revokeObjectURL(url);
-    } catch (err) {
-      console.error('Export failed:', err);
-    }
-  });
+  load();
 }
