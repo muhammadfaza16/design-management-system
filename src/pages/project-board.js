@@ -55,7 +55,7 @@ export async function renderProjectBoard(container, navigate, params) {
     return `
     <div class="design-card kanban-card" data-id="${d.id}" draggable="true">
       <div class="design-card__thumb" style="aspect-ratio:16/9">
-        ${d.imageData ? `<img src="${d.imageData}" alt="${d.title}" />` : `<div class="detail-image empty" style="height:100%;display:flex;align-items:center;justify-content:center;"><img src="/src/assets/icons/misc-camera.svg" class="illustrative-icon" style="opacity:0.1" /></div>`}
+        ${d.imageData ? `<img src="${d.imageData}" alt="${d.title}" />` : `<div class="detail-image empty" style="height:100%;display:flex;align-items:center;justify-content:center;"><img src="/assets/icons/misc-camera.svg" class="illustrative-icon" style="opacity:0.1" /></div>`}
       </div>
       <div class="design-card__body" style="padding:12px">
         <div class="design-card__title truncate" style="font-size:12px">${d.title}</div>
@@ -87,7 +87,7 @@ export async function renderProjectBoard(container, navigate, params) {
         <div class="page__actions" style="display:flex;gap:12px">
           <button class="btn btn-secondary" id="board-edit">Edit</button>
           <button class="btn btn-primary" id="board-export-zip">
-            <img src="/src/assets/icons/nav-library.svg" class="illustrative-icon" style="transform:rotate(90deg)" alt="Export" />
+            <img src="/assets/icons/nav-library.svg" class="illustrative-icon" style="transform:rotate(90deg)" alt="Export" />
             Export Starter Kit
           </button>
         </div>
@@ -187,7 +187,7 @@ export async function renderProjectBoard(container, navigate, params) {
             : `<div class="design-grid">${availableDesigns.map(d => `
               <div class="design-card board-add-card" data-id="${d.id}">
                 <div class="design-card__thumb" style="aspect-ratio:16/9">
-                  ${d.imageData ? `<img src="${d.imageData}" alt="${d.title}" />` : `<div class="detail-image empty" style="height:100%;display:flex;align-items:center;justify-content:center;"><img src="/src/assets/icons/misc-camera.svg" class="illustrative-icon" style="opacity:0.1" /></div>`}
+                  ${d.imageData ? `<img src="${d.imageData}" alt="${d.title}" />` : `<div class="detail-image empty" style="height:100%;display:flex;align-items:center;justify-content:center;"><img src="/assets/icons/misc-camera.svg" class="illustrative-icon" style="opacity:0.1" /></div>`}
                 </div>
                 <div class="design-card__body" style="padding:16px"><div class="design-card__title truncate" style="font-size:13px">${d.title}</div></div>
               </div>
@@ -338,7 +338,7 @@ export async function renderProjectBoard(container, navigate, params) {
       console.error(err);
       showToast('Export failed', 'error');
     } finally {
-      btn.innerHTML = '<img src="/src/assets/icons/nav-library.svg" class="illustrative-icon" style="transform:rotate(90deg)" alt="Export" /> Export Starter Kit';
+      btn.innerHTML = '<img src="/assets/icons/nav-library.svg" class="illustrative-icon" style="transform:rotate(90deg)" alt="Export" /> Export Starter Kit';
       btn.disabled = false;
     }
   });

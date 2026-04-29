@@ -17,7 +17,7 @@ export async function renderStylePresets(container, navigate) {
             <p class="page__subtitle">Saved design token sets and visual systems</p>
           </div>
           <button class="btn btn-primary" id="style-add">
-            <img src="/src/assets/icons/action-add.svg" class="illustrative-icon illustrative-icon--sm" alt="Add" />
+            <img src="/assets/icons/action-add.svg" class="illustrative-icon illustrative-icon--sm" alt="Add" />
             New Preset
           </button>
         </div>
@@ -25,7 +25,7 @@ export async function renderStylePresets(container, navigate) {
         <div id="style-list">
           ${presets.length === 0 ? `
             <div class="empty-state">
-              <div class="empty-state__icon"><img src="/src/assets/icons/misc-tags.svg" class="illustrative-icon illustrative-icon--lg" style="opacity:0.1" /></div>
+              <div class="empty-state__icon"><img src="/assets/icons/misc-tags.svg" class="illustrative-icon illustrative-icon--lg" style="opacity:0.1" /></div>
               <div class="empty-state__title">No style presets yet</div>
               <p class="empty-state__desc">Save color palettes, typography scales, and spacing systems extracted from your design references.</p>
             </div>

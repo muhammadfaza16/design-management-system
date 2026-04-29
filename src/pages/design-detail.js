@@ -23,7 +23,7 @@ export async function renderDesignDetail(container, navigate, params) {
         <div class="empty-state">
           <div class="empty-state__title">Design not found</div>
           <button class="btn btn-secondary" id="back-btn">
-            <img src="/src/assets/icons/nav-library.svg" class="illustrative-icon illustrative-icon--sm" style="transform: rotate(180deg);" alt="Back" />
+            <img src="/assets/icons/nav-library.svg" class="illustrative-icon illustrative-icon--sm" style="transform: rotate(180deg);" alt="Back" />
             Back to Library
           </button>
         </div>
@@ -70,11 +70,11 @@ export async function renderDesignDetail(container, navigate, params) {
             Edit
           </button>
           <button class="btn btn-secondary" id="detail-download">
-            <img src="/src/assets/icons/action-export.svg" class="illustrative-icon" alt="Export" />
+            <img src="/assets/icons/action-export.svg" class="illustrative-icon" alt="Export" />
             Export
           </button>
           <button class="btn btn-primary" id="detail-copy-prompt">
-            <img src="/src/assets/icons/action-copy.svg" class="illustrative-icon" alt="Copy" />
+            <img src="/assets/icons/action-copy.svg" class="illustrative-icon" alt="Copy" />
             Copy Prompt
           </button>
         </div>
@@ -88,14 +88,14 @@ export async function renderDesignDetail(container, navigate, params) {
             </div>
           ` : `
             <div class="detail-image empty" style="aspect-ratio:16/10;display:flex;align-items:center;justify-content:center;">
-              <img src="/src/assets/icons/misc-camera.svg" class="illustrative-icon illustrative-icon--lg" style="opacity: 0.1;" alt="No image" />
+              <img src="/assets/icons/misc-camera.svg" class="illustrative-icon illustrative-icon--lg" style="opacity: 0.1;" alt="No image" />
             </div>
           `}
           
           ${design.palette && design.palette.length > 0 ? `
           <div class="detail-section" style="margin-top:var(--space-6);margin-bottom:var(--space-2)">
             <div class="detail-section__title">
-              <img src="/src/assets/icons/misc-brief.svg" class="illustrative-icon" alt="Palette" />
+              <img src="/assets/icons/misc-brief.svg" class="illustrative-icon" alt="Palette" />
               Design DNA Colors
             </div>
             <div class="color-palette">
@@ -112,7 +112,7 @@ export async function renderDesignDetail(container, navigate, params) {
           <!-- AESTHETIC DNA EXTRACTION LAYER -->
           <div class="detail-section" style="margin-top:var(--space-8); background:rgba(var(--text-rgb),0.02); padding:24px; border-radius:12px; border:1px solid rgba(var(--text-rgb),0.06)">
             <div class="detail-section__title" style="margin-bottom:16px">
-              <img src="/src/assets/icons/misc-tags.svg" class="illustrative-icon" alt="DNA" />
+              <img src="/assets/icons/misc-tags.svg" class="illustrative-icon" alt="DNA" />
               Aesthetic DNA Extraction
             </div>
             <p style="font-size:13px;color:var(--text-secondary);margin-bottom:20px;margin-top:-8px">
@@ -150,7 +150,7 @@ export async function renderDesignDetail(container, navigate, params) {
 
           <div class="detail-section" style="margin-top:var(--space-8)">
             <div class="detail-section__title" style="margin-bottom:12px">
-              <img src="/src/assets/icons/misc-brief.svg" class="illustrative-icon" alt="Apply" />
+              <img src="/assets/icons/misc-brief.svg" class="illustrative-icon" alt="Apply" />
               Apply to Project
             </div>
             
@@ -185,7 +185,7 @@ export async function renderDesignDetail(container, navigate, params) {
 
             <div style="display:flex;gap:8px;margin-top:12px">
               <button class="btn btn-primary" id="generate-final" style="font-size:13px">
-                <img src="/src/assets/icons/ai-prompt.svg" class="illustrative-icon" alt="" />
+                <img src="/assets/icons/ai-prompt.svg" class="illustrative-icon" alt="" />
                 Generate Final Prompt
               </button>
             </div>
@@ -194,15 +194,15 @@ export async function renderDesignDetail(container, navigate, params) {
           <div class="prompt-editor" style="margin-top:var(--space-8)">
             <div class="prompt-editor__header">
               <div class="prompt-editor__title">
-                <img src="/src/assets/icons/ai-prompt.svg" class="illustrative-icon" alt="AI" />
+                <img src="/assets/icons/ai-prompt.svg" class="illustrative-icon" alt="AI" />
                 Final Prompt
               </div>
               <div class="prompt-editor__actions" style="display:flex;gap:8px">
                 <button class="btn-icon" id="prompt-regenerate" title="Regenerate from metadata">
-                  <img src="/src/assets/icons/nav-library.svg" class="illustrative-icon" style="width:16px;height:16px" alt="Regenerate" />
+                  <img src="/assets/icons/nav-library.svg" class="illustrative-icon" style="width:16px;height:16px" alt="Regenerate" />
                 </button>
                 <button class="btn-icon" id="prompt-copy" title="Copy Prompt">
-                  <img src="/src/assets/icons/action-copy.svg" class="illustrative-icon" style="width:16px;height:16px" alt="Copy" />
+                  <img src="/assets/icons/action-copy.svg" class="illustrative-icon" style="width:16px;height:16px" alt="Copy" />
                 </button>
               </div>
             </div>
@@ -213,13 +213,13 @@ export async function renderDesignDetail(container, navigate, params) {
         <div class="detail-sidebar">
           <div class="detail-section">
             <div class="detail-section__title">
-              <img src="/src/assets/icons/rating-star.svg" class="illustrative-icon" alt="Rating" />
+              <img src="/assets/icons/rating-star.svg" class="illustrative-icon" alt="Rating" />
               Intelligence Rating
             </div>
             <div class="star-rating" id="star-rating">
               ${[1,2,3,4,5].map(i => `
                 <span class="star-rating__star ${i <= design.rating ? 'filled' : ''}" data-val="${i}">
-                  <img src="/src/assets/icons/rating-star.svg" class="illustrative-icon" alt="Star" />
+                  <img src="/assets/icons/rating-star.svg" class="illustrative-icon" alt="Star" />
                 </span>
               `).join('')}
             </div>
@@ -227,7 +227,7 @@ export async function renderDesignDetail(container, navigate, params) {
 
           <div class="detail-section">
             <div class="detail-section__title">
-              <img src="/src/assets/icons/misc-tags.svg" class="illustrative-icon" alt="Tags" />
+              <img src="/assets/icons/misc-tags.svg" class="illustrative-icon" alt="Tags" />
               Meta Tags
             </div>
             <div class="tag-input-wrap" id="tag-container">
@@ -239,7 +239,7 @@ export async function renderDesignDetail(container, navigate, params) {
           ${design.componentType ? `
           <div class="detail-section">
             <div class="detail-section__title">
-              <img src="/src/assets/icons/nav-components.svg" class="illustrative-icon" alt="Component" />
+              <img src="/assets/icons/nav-components.svg" class="illustrative-icon" alt="Component" />
               Classification
             </div>
             <span class="badge badge--${getTagColor(design.componentType)}">${design.componentType}</span>
@@ -248,7 +248,7 @@ export async function renderDesignDetail(container, navigate, params) {
           ${design.focalComponents && design.focalComponents.length > 0 ? `
           <div class="detail-section">
             <div class="detail-section__title">
-              <img src="/src/assets/icons/nav-components.svg" class="illustrative-icon" alt="Focal" />
+              <img src="/assets/icons/nav-components.svg" class="illustrative-icon" alt="Focal" />
               Focal Elements
             </div>
             <div style="display:flex;flex-wrap:wrap;gap:6px">
@@ -258,7 +258,7 @@ export async function renderDesignDetail(container, navigate, params) {
 
           <div class="detail-section">
             <div class="detail-section__title">
-              <img src="/src/assets/icons/nav-library.svg" class="illustrative-icon" alt="Colors" />
+              <img src="/assets/icons/nav-library.svg" class="illustrative-icon" alt="Colors" />
               Color Palette
             </div>
             <div class="color-palette">
@@ -271,7 +271,7 @@ export async function renderDesignDetail(container, navigate, params) {
           ${design.aiAnalysis ? `
           <div class="detail-section">
             <div class="detail-section__title">
-              <img src="/src/assets/icons/ai-prompt.svg" class="illustrative-icon" alt="DNA" />
+              <img src="/assets/icons/ai-prompt.svg" class="illustrative-icon" alt="DNA" />
               Style DNA
             </div>
             <pre style="font-size:11px;font-family:var(--font-mono);color:rgba(0,0,0,0.55);white-space:pre-wrap;word-break:break-word;max-height:300px;overflow-y:auto;padding:12px;background:rgba(0,0,0,0.02);border:1px solid rgba(0,0,0,0.06);border-radius:8px">${design.aiAnalysis}</pre>
@@ -280,7 +280,7 @@ export async function renderDesignDetail(container, navigate, params) {
           ${design.notes ? `
           <div class="detail-section">
             <div class="detail-section__title">
-              <img src="/src/assets/icons/misc-notes.svg" class="illustrative-icon" alt="Notes" />
+              <img src="/assets/icons/misc-notes.svg" class="illustrative-icon" alt="Notes" />
               Curation Notes
             </div>
             <p class="detail-notes">${design.notes}</p>

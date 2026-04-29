@@ -47,7 +47,7 @@ export async function renderDashboard(container, navigate) {
                   <div class="dashboard-list-item__icon">
                     ${d.imageData
                       ? `<img src="${d.imageData}" style="width:100%;height:100%;object-fit:cover;border-radius:6px;filter:none" />`
-                      : `<img src="/src/assets/icons/misc-camera.svg" class="illustrative-icon" style="opacity:0.2" alt="" />`}
+                      : `<img src="/assets/icons/misc-camera.svg" class="illustrative-icon" style="opacity:0.2" alt="" />`}
                   </div>
                   <div class="dashboard-list-item__info">
                     <div class="dashboard-list-item__title">${d.title}</div>
@@ -69,7 +69,7 @@ export async function renderDashboard(container, navigate) {
               : stats.recentProjects.map(p => `
                 <div class="dashboard-list-item" data-project="${p.id}">
                   <div class="dashboard-list-item__icon">
-                    <img src="/src/assets/icons/nav-projects.svg" class="illustrative-icon" style="opacity:0.3" alt="" />
+                    <img src="/assets/icons/nav-projects.svg" class="illustrative-icon" style="opacity:0.3" alt="" />
                   </div>
                   <div class="dashboard-list-item__info">
                     <div class="dashboard-list-item__title">${p.title}</div>
@@ -105,15 +105,15 @@ export async function renderDashboard(container, navigate) {
           <div class="dashboard-panel__body" style="padding:20px">
             <div class="quick-actions">
               <button class="quick-action" id="qa-add-design">
-                <img src="/src/assets/icons/action-add.svg" class="illustrative-icon" alt="" />
+                <img src="/assets/icons/action-add.svg" class="illustrative-icon" alt="" />
                 <span>Add Reference</span>
               </button>
               <button class="quick-action" id="qa-new-project">
-                <img src="/src/assets/icons/nav-projects.svg" class="illustrative-icon" alt="" />
+                <img src="/assets/icons/nav-projects.svg" class="illustrative-icon" alt="" />
                 <span>New Project</span>
               </button>
               <button class="quick-action" id="qa-export">
-                <img src="/src/assets/icons/action-export.svg" class="illustrative-icon" alt="" />
+                <img src="/assets/icons/action-export.svg" class="illustrative-icon" alt="" />
                 <span>Export Backup</span>
               </button>
             </div>

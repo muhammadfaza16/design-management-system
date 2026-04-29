@@ -25,11 +25,11 @@ export function openUploadModal(onComplete, existing = null) {
     <div class="modal" id="upload-modal">
       <div class="modal__header">
         <h2 class="modal__title">
-          <img src="/src/assets/icons/${isEdit ? 'nav-library' : 'action-add'}.svg" class="illustrative-icon" alt="" />
+          <img src="/assets/icons/${isEdit ? 'nav-library' : 'action-add'}.svg" class="illustrative-icon" alt="" />
           ${isEdit ? 'Edit Design Reference' : 'Add Design Reference'}
         </h2>
         <button class="btn-icon" id="modal-close">
-          <img src="/src/assets/icons/status-error.svg" class="illustrative-icon" alt="Close" />
+          <img src="/assets/icons/status-error.svg" class="illustrative-icon" alt="Close" />
         </button>
       </div>
       <div class="modal__body">
@@ -41,7 +41,7 @@ export function openUploadModal(onComplete, existing = null) {
               <div class="drop-zone__text" style="margin-top:8px">Click or drop to replace</div>
             ` : `
               <div class="drop-zone__icon">
-                <img src="/src/assets/icons/nav-library.svg" class="illustrative-icon illustrative-icon--lg" alt="Upload" />
+                <img src="/assets/icons/nav-library.svg" class="illustrative-icon illustrative-icon--lg" alt="Upload" />
               </div>
               <div class="drop-zone__text">Drop image here or <strong>click to browse</strong></div>
             `}
@@ -69,14 +69,14 @@ export function openUploadModal(onComplete, existing = null) {
           <div style="border-top:1px solid rgba(0,0,0,0.06);margin:16px 0"></div>
           <div class="modal__field">
             <label class="modal__label">
-              <img src="/src/assets/icons/ai-prompt.svg" class="illustrative-icon" alt="" style="vertical-align:middle;margin-right:4px" />
+              <img src="/assets/icons/ai-prompt.svg" class="illustrative-icon" alt="" style="vertical-align:middle;margin-right:4px" />
               AI Extraction
               <span style="opacity:0.4;font-weight:400;text-transform:none;letter-spacing:0">(one-shot complete analysis)</span>
             </label>
             <p style="font-size:11px;color:rgba(0,0,0,0.4);margin:0 0 10px">Copy the prompt below and paste it into your AI tool. The reference image will be copied to your clipboard alongside the prompt.</p>
             <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap">
               <button class="btn btn-primary" id="copy-ai-bundle" type="button" style="font-size:12px;padding:6px 14px">
-                <img src="/src/assets/icons/action-copy.svg" class="illustrative-icon" alt="" />
+                <img src="/assets/icons/action-copy.svg" class="illustrative-icon" alt="" />
                 Copy Prompt + Image
               </button>
               <button class="btn btn-secondary" id="copy-ai-text-only" type="button" style="font-size:12px;padding:6px 14px">
@@ -124,7 +124,7 @@ export function openUploadModal(onComplete, existing = null) {
       <div class="modal__footer">
         <button class="btn btn-secondary" id="modal-cancel">Cancel</button>
         <button class="btn btn-primary" id="modal-save">
-          <img src="/src/assets/icons/misc-brief.svg" class="illustrative-icon illustrative-icon--sm" alt="" />
+          <img src="/assets/icons/misc-brief.svg" class="illustrative-icon illustrative-icon--sm" alt="" />
           ${isEdit ? 'Update Design' : 'Save Design'}
         </button>
       </div>

@@ -33,7 +33,7 @@ export async function renderPromptVault(container, navigate) {
             <p class="page__subtitle">Reusable AI prompts for your design-to-code workflow</p>
           </div>
           <button class="btn btn-primary" id="prompt-add">
-            <img src="/src/assets/icons/action-add.svg" class="illustrative-icon illustrative-icon--sm" alt="Add" />
+            <img src="/assets/icons/action-add.svg" class="illustrative-icon illustrative-icon--sm" alt="Add" />
             New Prompt
           </button>
         </div>
@@ -51,7 +51,7 @@ export async function renderPromptVault(container, navigate) {
         <div id="prompt-list">
           ${prompts.length === 0 ? `
             <div class="empty-state">
-              <div class="empty-state__icon"><img src="/src/assets/icons/ai-prompt.svg" class="illustrative-icon illustrative-icon--lg" style="opacity:0.1" /></div>
+              <div class="empty-state__icon"><img src="/assets/icons/ai-prompt.svg" class="illustrative-icon illustrative-icon--lg" style="opacity:0.1" /></div>
               <div class="empty-state__title">${searchQuery ? 'No prompts match your search' : 'No prompts saved yet'}</div>
               <p class="empty-state__desc">Create reusable prompt templates for common design extraction tasks.</p>
             </div>

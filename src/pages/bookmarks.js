@@ -48,7 +48,7 @@ export async function renderBookmarks(container, navigate) {
           ${bookmarks.length === 0 ? `
             <div class="empty-state">
               <div class="empty-state__icon">
-                <img src="/src/assets/icons/misc-brief.svg" class="illustrative-icon illustrative-icon--lg" style="opacity:0.1" alt="Empty" />
+                <img src="/assets/icons/misc-brief.svg" class="illustrative-icon illustrative-icon--lg" style="opacity:0.1" alt="Empty" />
               </div>
               <div class="empty-state__title">${searchQuery ? 'No bookmarks match your search' : 'No bookmarks yet'}</div>
               <p class="text-muted" style="text-align:center;max-width:400px;margin:16px auto">
@@ -65,7 +65,7 @@ export async function renderBookmarks(container, navigate) {
                     </div>
                   ` : `
                     <div class="design-card__thumb" style="aspect-ratio:16/10; background:var(--bg-input); display:flex; align-items:center; justify-content:center;">
-                      <img src="/src/assets/icons/misc-camera.svg" class="illustrative-icon illustrative-icon--md" style="opacity:0.2;" />
+                      <img src="/assets/icons/misc-camera.svg" class="illustrative-icon illustrative-icon--md" style="opacity:0.2;" />
                     </div>
                   `}
                   <div class="design-card__body" style="padding: 20px;">

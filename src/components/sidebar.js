@@ -13,7 +13,7 @@ export async function renderSidebar(container, currentPage, navigate) {
 
     <div class="search-bar">
       <span class="search-bar__icon">
-        <img src="/src/assets/icons/action-search.svg" class="illustrative-icon" alt="" />
+        <img src="/assets/icons/action-search.svg" class="illustrative-icon" alt="" />
       </span>
       <input class="search-bar__input" id="sidebar-search" type="text" placeholder="Search..." />
       <span class="search-bar__shortcut">/</span>
@@ -26,20 +26,20 @@ export async function renderSidebar(container, currentPage, navigate) {
         </div>
         <a class="sidebar__link ${currentPage === 'dashboard' ? 'active' : ''}" data-page="dashboard">
           <span class="sidebar__link-icon">
-            <img src="/src/assets/icons/nav-library.svg" class="illustrative-icon" alt="" />
+            <img src="/assets/icons/nav-library.svg" class="illustrative-icon" alt="" />
           </span>
           <span>Dashboard</span>
         </a>
         <a class="sidebar__link ${currentPage === 'library' ? 'active' : ''}" data-page="library">
           <span class="sidebar__link-icon">
-            <img src="/src/assets/icons/nav-library.svg" class="illustrative-icon" alt="" />
+            <img src="/assets/icons/nav-library.svg" class="illustrative-icon" alt="" />
           </span>
           <span>Library</span>
           <span class="sidebar__link-count">${designCount}</span>
         </a>
         <a class="sidebar__link ${currentPage === 'bookmarks' ? 'active' : ''}" data-page="bookmarks">
           <span class="sidebar__link-icon">
-            <img src="/src/assets/icons/misc-brief.svg" class="illustrative-icon" alt="" />
+            <img src="/assets/icons/misc-brief.svg" class="illustrative-icon" alt="" />
           </span>
           <span>Bookmarks</span>
         </a>
@@ -51,25 +51,25 @@ export async function renderSidebar(container, currentPage, navigate) {
         </div>
         <a class="sidebar__link ${currentPage === 'knowledge' ? 'active' : ''}" data-page="knowledge">
           <span class="sidebar__link-icon">
-            <img src="/src/assets/icons/misc-notes.svg" class="illustrative-icon" alt="" />
+            <img src="/assets/icons/misc-notes.svg" class="illustrative-icon" alt="" />
           </span>
           <span>Knowledge Bank</span>
         </a>
         <a class="sidebar__link ${currentPage === 'prompts' ? 'active' : ''}" data-page="prompts">
           <span class="sidebar__link-icon">
-            <img src="/src/assets/icons/ai-prompt.svg" class="illustrative-icon" alt="" />
+            <img src="/assets/icons/ai-prompt.svg" class="illustrative-icon" alt="" />
           </span>
           <span>Prompt Vault</span>
         </a>
         <a class="sidebar__link ${currentPage === 'snippets' ? 'active' : ''}" data-page="snippets">
           <span class="sidebar__link-icon">
-            <img src="/src/assets/icons/action-copy.svg" class="illustrative-icon" alt="" />
+            <img src="/assets/icons/action-copy.svg" class="illustrative-icon" alt="" />
           </span>
           <span>Snippets</span>
         </a>
         <a class="sidebar__link ${currentPage === 'styles' ? 'active' : ''}" data-page="styles">
           <span class="sidebar__link-icon">
-            <img src="/src/assets/icons/misc-tags.svg" class="illustrative-icon" alt="" />
+            <img src="/assets/icons/misc-tags.svg" class="illustrative-icon" alt="" />
           </span>
           <span>Style Presets</span>
         </a>
@@ -82,7 +82,7 @@ export async function renderSidebar(container, currentPage, navigate) {
         </div>
         <a class="sidebar__link ${currentPage === 'projects' ? 'active' : ''}" data-page="projects">
           <span class="sidebar__link-icon">
-            <img src="/src/assets/icons/nav-projects.svg" class="illustrative-icon" alt="" />
+            <img src="/assets/icons/nav-projects.svg" class="illustrative-icon" alt="" />
           </span>
           <span>All Projects</span>
           <span class="sidebar__link-count">${projects.length}</span>
@@ -90,7 +90,7 @@ export async function renderSidebar(container, currentPage, navigate) {
         ${projects.slice(0, 8).map(p => `
           <a class="sidebar__link" data-project="${p.id}">
             <span class="sidebar__link-icon">
-              <img src="/src/assets/icons/nav-projects.svg" class="illustrative-icon" alt="" />
+              <img src="/assets/icons/nav-projects.svg" class="illustrative-icon" alt="" />
             </span>
             <span class="truncate">${p.title}</span>
             <span class="sidebar__link-count">${p.designIds.length}</span>
@@ -98,7 +98,7 @@ export async function renderSidebar(container, currentPage, navigate) {
         `).join('')}
         <a class="sidebar__link" id="sidebar-new-design">
           <span class="sidebar__link-icon">
-            <img src="/src/assets/icons/action-add.svg" class="illustrative-icon" alt="" />
+            <img src="/assets/icons/action-add.svg" class="illustrative-icon" alt="" />
           </span>
           <span>Add Reference</span>
         </a>

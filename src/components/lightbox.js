@@ -6,7 +6,7 @@ export function openLightbox(imageSrc) {
   lb.className = 'lightbox';
   lb.innerHTML = `
     <button class="lightbox__close btn-icon" id="lightbox-close">
-      <img src="/src/assets/icons/status-error.svg" class="illustrative-icon" alt="Close" />
+      <img src="/assets/icons/status-error.svg" class="illustrative-icon" alt="Close" />
     </button>
     <img src="${imageSrc}" alt="Preview" />
   `;

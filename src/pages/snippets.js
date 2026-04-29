@@ -33,7 +33,7 @@ export async function renderSnippets(container, navigate) {
             <p class="page__subtitle">Reusable code fragments for your projects</p>
           </div>
           <button class="btn btn-primary" id="snippet-add">
-            <img src="/src/assets/icons/action-add.svg" class="illustrative-icon illustrative-icon--sm" alt="Add" />
+            <img src="/assets/icons/action-add.svg" class="illustrative-icon illustrative-icon--sm" alt="Add" />
             New Snippet
           </button>
         </div>
@@ -51,7 +51,7 @@ export async function renderSnippets(container, navigate) {
         <div id="snippet-list">
           ${snippets.length === 0 ? `
             <div class="empty-state">
-              <div class="empty-state__icon"><img src="/src/assets/icons/action-copy.svg" class="illustrative-icon illustrative-icon--lg" style="opacity:0.1" /></div>
+              <div class="empty-state__icon"><img src="/assets/icons/action-copy.svg" class="illustrative-icon illustrative-icon--lg" style="opacity:0.1" /></div>
               <div class="empty-state__title">${searchQuery ? 'No snippets match' : 'No snippets yet'}</div>
               <p class="empty-state__desc">Save reusable code fragments — CSS patterns, component templates, utilities.</p>
             </div>

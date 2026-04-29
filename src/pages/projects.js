@@ -27,7 +27,7 @@ export async function renderProjects(container, navigate) {
               <p class="page__subtitle">Organize designs by client or project intelligence</p>
             </div>
             <button class="btn btn-primary" id="proj-add">
-              <img src="/src/assets/icons/action-add.svg" class="illustrative-icon" alt="Add" />
+              <img src="/assets/icons/action-add.svg" class="illustrative-icon" alt="Add" />
               New Project
             </button>
           </div>
@@ -56,7 +56,7 @@ export async function renderProjects(container, navigate) {
         </button>
       `).join('')}
       <button class="btn-ghost" id="folder-add" style="font-size:11px;font-weight:600;padding:4px 10px;border-radius:6px;display:flex;align-items:center;gap:4px">
-        <img src="/src/assets/icons/action-add.svg" class="illustrative-icon illustrative-icon--sm" alt="Add" />
+        <img src="/assets/icons/action-add.svg" class="illustrative-icon illustrative-icon--sm" alt="Add" />
         New Folder
       </button>
     `;
@@ -86,7 +86,7 @@ export async function renderProjects(container, navigate) {
           ${filteredProjects.length === 0 ? `
             <div class="empty-state">
               <div class="empty-state__icon">
-                <img src="/src/assets/icons/nav-projects.svg" class="illustrative-icon illustrative-icon--lg" style="opacity:0.1" alt="Empty" />
+                <img src="/assets/icons/nav-projects.svg" class="illustrative-icon illustrative-icon--lg" style="opacity:0.1" alt="Empty" />
               </div>
               <div class="empty-state__title">${currentFolderId === 'all' ? 'No active projects' : 'Folder is empty'}</div>
               <p class="text-muted" style="text-align:center;max-width:400px;margin:16px auto">
@@ -199,11 +199,11 @@ export async function openProjectModal(onComplete, existing = null) {
     <div class="modal">
       <div class="modal__header">
         <h2 class="modal__title">
-          <img src="/src/assets/icons/nav-projects.svg" class="illustrative-icon" alt="" />
+          <img src="/assets/icons/nav-projects.svg" class="illustrative-icon" alt="" />
           ${isEdit ? 'Edit Project' : 'New Project'}
         </h2>
         <button class="btn-icon" id="proj-modal-close">
-          <img src="/src/assets/icons/status-error.svg" class="illustrative-icon" alt="Close" />
+          <img src="/assets/icons/status-error.svg" class="illustrative-icon" alt="Close" />
         </button>
       </div>
       <div class="modal__body">

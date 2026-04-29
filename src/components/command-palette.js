@@ -23,7 +23,7 @@ export function initCommandPalette(navigate) {
     backdrop.innerHTML = `
       <div class="cmd-palette">
         <div class="cmd-palette__search">
-          <img src="/src/assets/icons/action-search.svg" class="illustrative-icon" alt="" />
+          <img src="/assets/icons/action-search.svg" class="illustrative-icon" alt="" />
           <input type="text" id="cmd-input" placeholder="Search or type a command..." autofocus />
           <kbd class="cmd-palette__esc">ESC</kbd>
         </div>
@@ -31,7 +31,7 @@ export function initCommandPalette(navigate) {
           <div class="cmd-palette__section-label">Actions</div>
           ${ACTIONS.map((a, i) => `
             <div class="cmd-palette__item" data-action="${i}">
-              <img src="/src/assets/icons/${a.icon}.svg" class="illustrative-icon" alt="" />
+              <img src="/assets/icons/${a.icon}.svg" class="illustrative-icon" alt="" />
               <span>${a.label}</span>
             </div>
           `).join('')}
@@ -74,7 +74,7 @@ export function initCommandPalette(navigate) {
             <div class="cmd-palette__section-label">Actions</div>
             ${ACTIONS.map((a, i) => `
               <div class="cmd-palette__item" data-action="${i}">
-                <img src="/src/assets/icons/${a.icon}.svg" class="illustrative-icon" alt="" />
+                <img src="/assets/icons/${a.icon}.svg" class="illustrative-icon" alt="" />
                 <span>${a.label}</span>
               </div>
             `).join('')}
@@ -95,7 +95,7 @@ export function initCommandPalette(navigate) {
             const idx = ACTIONS.indexOf(a);
             html += `
               <div class="cmd-palette__item" data-action="${idx}">
-                <img src="/src/assets/icons/${a.icon}.svg" class="illustrative-icon" alt="" />
+                <img src="/assets/icons/${a.icon}.svg" class="illustrative-icon" alt="" />
                 <span>${a.label}</span>
               </div>
             `;
@@ -107,7 +107,7 @@ export function initCommandPalette(navigate) {
           results.designs.forEach(d => {
             html += `
               <div class="cmd-palette__item" data-goto="detail" data-id="${d.id}">
-                <img src="/src/assets/icons/nav-library.svg" class="illustrative-icon" alt="" />
+                <img src="/assets/icons/nav-library.svg" class="illustrative-icon" alt="" />
                 <span>${d.title}</span>
                 <span class="text-muted" style="margin-left:auto">${d.componentType || ''}</span>
               </div>
@@ -120,7 +120,7 @@ export function initCommandPalette(navigate) {
           results.projects.forEach(p => {
             html += `
               <div class="cmd-palette__item" data-goto="project-board" data-id="${p.id}">
-                <img src="/src/assets/icons/nav-projects.svg" class="illustrative-icon" alt="" />
+                <img src="/assets/icons/nav-projects.svg" class="illustrative-icon" alt="" />
                 <span>${p.title}</span>
               </div>
             `;

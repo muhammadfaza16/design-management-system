@@ -52,7 +52,7 @@ export async function renderLibrary(container, navigate) {
                 <div class="segmented-control__item ${viewMode === 'list' ? 'active' : ''}" data-mode="list">List</div>
               </div>
               <button class="btn btn-primary" id="lib-add-btn">
-                <img src="/src/assets/icons/action-add.svg" class="illustrative-icon illustrative-icon--sm" alt="Add" />
+                <img src="/assets/icons/action-add.svg" class="illustrative-icon illustrative-icon--sm" alt="Add" />
                 Add Reference
               </button>
             </div>
@@ -97,7 +97,7 @@ export async function renderLibrary(container, navigate) {
     container.querySelector('#lib-collections').innerHTML = projects.map(p => `
       <div class="collection-card" data-project="${p.id}">
         <div class="collection-card__thumb">
-          <img src="/src/assets/icons/nav-library.svg" class="collection-card__icon" alt="Folder" />
+          <img src="/assets/icons/nav-library.svg" class="collection-card__icon" alt="Folder" />
         </div>
         <div class="collection-card__info">
           <div class="collection-card__name">${p.title}</div>
@@ -170,7 +170,7 @@ export async function renderLibrary(container, navigate) {
               <td>
                 <div class="table-row-name">
                   <div class="table-row-icon">
-                    <img src="/src/assets/icons/nav-library.svg" class="illustrative-icon" style="width:14px;opacity:0.6" alt="File" />
+                    <img src="/assets/icons/nav-library.svg" class="illustrative-icon" style="width:14px;opacity:0.6" alt="File" />
                   </div>
                   ${d.title}
                 </div>
@@ -208,7 +208,7 @@ export async function renderLibrary(container, navigate) {
       <div class="design-card animate-fade-in-up ${stagger} ${selectedIds.has(d.id) ? 'selected-card' : ''}" data-id="${d.id}">
         ${bulkMode ? `<div class="card-check-overlay"><input type="checkbox" class="bulk-check" data-id="${d.id}" ${selectedIds.has(d.id) ? 'checked' : ''} /></div>` : ''}
         <div class="design-card__thumb">
-          ${d.imageData ? `<img src="${d.imageData}" alt="${d.title}" />` : `<div style="height:100%;display:flex;align-items:center;justify-content:center"><img src="/src/assets/icons/misc-camera.svg" class="illustrative-icon illustrative-icon--lg" style="opacity:0.12" alt="No image" /></div>`}
+          ${d.imageData ? `<img src="${d.imageData}" alt="${d.title}" />` : `<div style="height:100%;display:flex;align-items:center;justify-content:center"><img src="/assets/icons/misc-camera.svg" class="illustrative-icon illustrative-icon--lg" style="opacity:0.12" alt="No image" /></div>`}
         </div>
         <div class="design-card__body">
           <div class="design-card__title truncate">${d.title}</div>
