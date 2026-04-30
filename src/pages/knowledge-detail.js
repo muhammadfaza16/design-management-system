@@ -50,11 +50,17 @@ export async function renderKnowledgeDetail(container, navigate, params) {
       <!-- Article Body -->
       <article style="font-size: 18px; line-height: 1.7; color: rgba(var(--text-rgb), 0.85);">
         
-        <div style="background: var(--bg-surface); border: 1px solid rgba(var(--text-rgb), 0.08); border-radius: var(--radius-lg); padding: 32px; margin-bottom: 48px; border-left: 4px solid var(--accent); box-shadow: 0 12px 32px rgba(0,0,0,0.02);">
-          <h3 style="font-size: 14px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-secondary); margin: 0 0 16px; font-weight: 700;">Design Rationale</h3>
-          <p style="margin: 0; font-size: 18px; font-weight: 500; color: var(--text-primary); line-height: 1.6;">
-            ${item.description}
-          </p>
+        <div style="background: var(--bg-surface); border: 1px solid rgba(var(--text-rgb), 0.08); border-radius: var(--radius-lg); padding: 40px; margin-bottom: 48px; border-left: 4px solid var(--accent); box-shadow: 0 12px 32px rgba(0,0,0,0.02);" class="article-elaboration">
+          <style>
+            .article-elaboration p { margin: 0 0 20px; font-size: 17px; font-weight: 400; color: rgba(var(--text-rgb), 0.85); line-height: 1.7; }
+            .article-elaboration p:last-child { margin-bottom: 0; }
+            .article-elaboration h3 { margin: 32px 0 16px; font-size: 20px; font-weight: 700; color: var(--text-primary); }
+            .article-elaboration ul, .article-elaboration ol { margin: 0 0 24px 24px; font-size: 17px; color: rgba(var(--text-rgb), 0.85); line-height: 1.7; }
+            .article-elaboration li { margin-bottom: 8px; }
+            .article-elaboration strong { color: var(--text-primary); font-weight: 600; }
+            .article-elaboration code { font-family: var(--font-mono); background: rgba(var(--text-rgb), 0.05); padding: 2px 6px; border-radius: 4px; font-size: 14px; }
+          </style>
+          ${item.elaboration || `<p style="margin: 0; font-size: 18px; font-weight: 500; color: var(--text-primary); line-height: 1.6;">${item.description}</p>`}
         </div>
 
         <h2 style="font-size: 24px; font-weight: 700; margin: 48px 0 24px; color: var(--text-primary);">Implementation Constraint</h2>
