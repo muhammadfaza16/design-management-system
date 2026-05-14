@@ -2,6 +2,7 @@
 import { getAllStylePresets, addStylePreset, deleteStylePreset } from '../db/store.js';
 import { showToast } from '../components/toast.js';
 import { showPrompt, showConfirm } from '../components/dialog.js';
+import { showUndoToast } from '../components/undo-toast.js';
 import { copyToClipboard } from '../utils/export.js';
 import { timeAgo } from '../utils/helpers.js';
 
@@ -134,16 +135,24 @@ export async function renderStylePresets(container, navigate) {
       });
     });
 
-    // Delete
+    // Delete (soft-delete with undo)
     container.querySelectorAll('.style-delete').forEach(btn => {
       btn.addEventListener('click', async (e) => {
         e.stopPropagation();
-        const ok = await showConfirm('This style preset will be permanently deleted.', { title: 'Delete Preset?', confirmLabel: 'Delete', danger: true });
-        if (ok) {
-          await deleteStylePreset(btn.dataset.id);
-          showToast('Preset deleted', 'info');
-          load();
-        }
+        const s = presets.find(x => x.id === btn.dataset.id);
+        if (!s) return;
+        const card = btn.closest('.design-card');
+        if (card) card.style.display = 'none';
+        showUndoToast(`"${s.name}" deleted`, {
+          onCommit: async () => {
+            await deleteStylePreset(btn.dataset.id);
+            load();
+          },
+          onUndo: () => {
+            if (card) card.style.display = '';
+            showToast('Delete cancelled', 'success');
+          }
+        });
       });
     });
 

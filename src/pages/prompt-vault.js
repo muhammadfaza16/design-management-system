@@ -2,6 +2,7 @@
 import { getAllPrompts, addPrompt, updatePrompt, deletePrompt, incrementPromptUse } from '../db/store.js';
 import { showToast } from '../components/toast.js';
 import { showPrompt, showConfirm } from '../components/dialog.js';
+import { showUndoToast } from '../components/undo-toast.js';
 import { copyToClipboard } from '../utils/export.js';
 import { timeAgo, debounce } from '../utils/helpers.js';
 
@@ -142,16 +143,24 @@ export async function renderPromptVault(container, navigate) {
       });
     });
 
-    // Delete
+    // Delete (soft-delete with undo)
     container.querySelectorAll('.prompt-delete').forEach(btn => {
       btn.addEventListener('click', async (e) => {
         e.stopPropagation();
-        const ok = await showConfirm('This prompt will be permanently deleted.', { title: 'Delete Prompt?', confirmLabel: 'Delete', danger: true });
-        if (ok) {
-          await deletePrompt(btn.dataset.id);
-          showToast('Prompt deleted', 'info');
-          load();
-        }
+        const p = prompts.find(x => x.id === btn.dataset.id);
+        if (!p) return;
+        const card = btn.closest('.prompt-card');
+        if (card) card.style.display = 'none';
+        showUndoToast(`"${p.title}" deleted`, {
+          onCommit: async () => {
+            await deletePrompt(btn.dataset.id);
+            load();
+          },
+          onUndo: () => {
+            if (card) card.style.display = '';
+            showToast('Delete cancelled', 'success');
+          }
+        });
       });
     });
   }

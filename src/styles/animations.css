@@ -47,3 +47,13 @@
 .stagger-2 { animation-delay: 80ms; }
 .stagger-3 { animation-delay: 120ms; }
 .stagger-4 { animation-delay: 160ms; }
+
+/* Undo toast progress bar */
+@keyframes undoShrink {
+  from { width: 100%; }
+  to { width: 0%; }
+}
+
+/* Hover lift utility */
+.hover-lift { transition: transform 0.25s var(--ease-out), box-shadow 0.25s var(--ease-out); }
+.hover-lift:hover { transform: translateY(-3px); box-shadow: 0 8px 24px rgba(var(--text-rgb), 0.08); }

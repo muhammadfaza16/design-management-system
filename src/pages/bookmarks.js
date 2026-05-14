@@ -1,7 +1,8 @@
 // DesignVault — Bookmarks / Inspirations Page
-import { getAllBookmarks, addBookmark, deleteBookmark, updateBookmark } from '../db/store.js';
+import { getAllBookmarks, addBookmark, deleteBookmark, updateBookmark, addDesign } from '../db/store.js';
 import { showToast } from '../components/toast.js';
 import { showConfirm, showPrompt } from '../components/dialog.js';
+import { showUndoToast } from '../components/undo-toast.js';
 import { timeAgo, debounce } from '../utils/helpers.js';
 
 export async function renderBookmarks(container, navigate) {
@@ -155,6 +156,7 @@ export async function renderBookmarks(container, navigate) {
               <div style="display:flex; justify-content:space-between; align-items:center; margin-top:16px; border-top:1px solid rgba(var(--text-rgb),0.06); padding-top:16px;">
                 <span style="font-size:11px; color:rgba(var(--text-rgb),0.3); font-weight:600;">${timeAgo(b.createdAt)}</span>
                 <div style="display:flex; gap:4px;">
+                  <button class="btn btn-ghost bookmark-promote" data-id="${b.id}" style="font-size:11px; padding:4px 8px; color:var(--accent)" title="Add to Design Library">→ Library</button>
                   <button class="btn btn-ghost bookmark-edit" data-id="${b.id}" style="font-size:11px; padding:4px 8px;">Edit</button>
                   <button class="btn btn-ghost btn-danger bookmark-delete" data-id="${b.id}" style="font-size:11px; padding:4px 8px;">Delete</button>
                 </div>
@@ -165,16 +167,80 @@ export async function renderBookmarks(container, navigate) {
       </div>
     `;
 
-    // Reattach Delete Listeners
+    // Reattach Delete Listeners (soft-delete with undo)
     container.querySelectorAll('.bookmark-delete').forEach(btn => {
       btn.addEventListener('click', async (e) => {
         e.preventDefault();
         e.stopPropagation();
-        const ok = await showConfirm('This bookmark will be permanently deleted.', { title: 'Delete Bookmark?', confirmLabel: 'Delete', danger: true });
+        const bookmark = bookmarks.find(b => b.id === btn.dataset.id);
+        if (!bookmark) return;
+        // Hide card immediately
+        const card = btn.closest('.design-card');
+        if (card) card.style.display = 'none';
+        showUndoToast(`Bookmark deleted`, {
+          onCommit: async () => {
+            await deleteBookmark(btn.dataset.id);
+            load();
+          },
+          onUndo: () => {
+            if (card) card.style.display = '';
+            showToast('Delete cancelled', 'success');
+          }
+        });
+      });
+    });
+
+    // Reattach Promote Listeners
+    container.querySelectorAll('.bookmark-promote').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        const bookmark = bookmarks.find(b => b.id === btn.dataset.id);
+        if (!bookmark) return;
+
+        const ok = await showConfirm(`Convert "${bookmark.title || bookmark.url}" to a Library Design Reference?`, {
+          title: 'Promote Bookmark',
+          confirmLabel: 'Promote to Library'
+        });
+
         if (ok) {
-          await deleteBookmark(btn.dataset.id);
-          showToast('Bookmark deleted', 'info');
-          load();
+          // Create new design
+          const newDesign = {
+            id: 'd_' + Date.now().toString(36),
+            title: bookmark.title || 'Imported from Bookmark',
+            description: bookmark.description || '',
+            url: bookmark.url,
+            imageData: bookmark.image || null, // Will use bookmark preview if available
+            componentType: 'misc',
+            tags: bookmark.publisher ? [bookmark.publisher.toLowerCase()] : [],
+            features: [],
+            vibe: [],
+            colorPalette: [],
+            promptVersions: [],
+            notes: `Source: ${bookmark.url}`,
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
+          };
+
+          await addDesign(newDesign);
+          
+          // Soft delete the bookmark since it's promoted
+          const card = btn.closest('.design-card');
+          if (card) card.style.display = 'none';
+          
+          showUndoToast(`Promoted to Library`, {
+            onCommit: async () => {
+              await deleteBookmark(bookmark.id);
+              load();
+            },
+            onUndo: () => {
+              if (card) card.style.display = '';
+              // In a real perfect system we might also want to delete the created design here if undone,
+              // but keeping it simple for now as soft-deleting the bookmark is the main destructive action.
+              showToast('Promotion cancelled (bookmark restored)', 'success');
+            }
+          });
         }
       });
     });

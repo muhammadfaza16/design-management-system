@@ -24,9 +24,35 @@ const main = document.getElementById('main-content');
 let currentPage = 'dashboard';
 let currentParams = {};
 
-async function navigate(page, params = {}) {
+// ─── URL ↔ Route mapping ───────────────────────────────────────────────
+function pageToHash(page, params = {}) {
+  let hash = `#/${page}`;
+  if (params.id) hash += `/${params.id}`;
+  return hash;
+}
+
+function hashToRoute(hash) {
+  if (!hash || hash === '#' || hash === '#/') {
+    return { page: 'dashboard', params: {} };
+  }
+  const parts = hash.replace('#/', '').split('/');
+  const page = parts[0] || 'dashboard';
+  const params = parts[1] ? { id: parts[1] } : {};
+  return { page, params };
+}
+
+// ─── Navigation ────────────────────────────────────────────────────────
+async function navigate(page, params = {}, { pushState = true } = {}) {
   currentPage = page;
   currentParams = params;
+
+  // Update URL hash without triggering hashchange
+  if (pushState) {
+    const newHash = pageToHash(page, params);
+    if (window.location.hash !== newHash) {
+      history.pushState({ page, params }, '', newHash);
+    }
+  }
 
   // Auto-close mobile sidebar on navigate
   document.body.classList.remove('sidebar-open');
@@ -76,7 +102,18 @@ async function navigate(page, params = {}) {
   window.scrollTo(0, 0);
 }
 
-// Global Events
+// ─── Browser back/forward support ──────────────────────────────────────
+window.addEventListener('popstate', (e) => {
+  if (e.state && e.state.page) {
+    navigate(e.state.page, e.state.params || {}, { pushState: false });
+  } else {
+    // Fallback: parse from hash
+    const { page, params } = hashToRoute(window.location.hash);
+    navigate(page, params, { pushState: false });
+  }
+});
+
+// ─── Global Events ─────────────────────────────────────────────────────
 document.getElementById('mobile-nav-toggle')?.addEventListener('click', () => {
   document.body.classList.toggle('sidebar-open');
 });
@@ -120,5 +157,10 @@ window.addEventListener('toggle-theme', () => {
 // Init command palette
 initCommandPalette(navigate);
 
-// Start
-navigate('dashboard');
+// ─── Start: restore from URL or default to dashboard ───────────────────
+import { seedDummyData } from './db/store.js';
+
+seedDummyData().then(() => {
+  const { page: initialPage, params: initialParams } = hashToRoute(window.location.hash);
+  navigate(initialPage, initialParams);
+});

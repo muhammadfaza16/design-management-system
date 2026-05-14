@@ -459,3 +459,204 @@ export async function getStats() {
     recentProjects: projects.slice(0, 5),
   };
 }
+
+// ==========================================
+// IMPORT / RESTORE BACKUP
+// ==========================================
+
+/**
+ * Clears ALL data from every object store.
+ */
+export async function clearAllData() {
+  const db = await getDB();
+  const storeNames = ['designs', 'projects', 'bookmarks', 'prompts', 'snippets', 'styles', 'project_folders'];
+  const tx = db.transaction(storeNames, 'readwrite');
+  for (const name of storeNames) {
+    await tx.objectStore(name).clear();
+  }
+  await tx.done;
+}
+
+/**
+ * Preview what a backup file contains without importing.
+ * @param {object} backup - parsed JSON backup
+ * @returns {{ valid: boolean, counts: object, version: number, exportedAt: string, error?: string }}
+ */
+export function previewBackup(backup) {
+  if (!backup || typeof backup !== 'object') {
+    return { valid: false, error: 'File is not valid JSON.' };
+  }
+  if (!backup.data || typeof backup.data !== 'object') {
+    return { valid: false, error: 'Invalid backup format — missing "data" field.' };
+  }
+
+  const storeKeys = ['designs', 'projects', 'bookmarks', 'prompts', 'snippets', 'stylePresets'];
+  const counts = {};
+  for (const key of storeKeys) {
+    const items = backup.data[key];
+    counts[key] = Array.isArray(items) ? items.length : 0;
+  }
+
+  const total = Object.values(counts).reduce((a, b) => a + b, 0);
+  if (total === 0) {
+    return { valid: false, error: 'Backup file contains no data.' };
+  }
+
+  return {
+    valid: true,
+    counts,
+    version: backup.version || 1,
+    exportedAt: backup.exportedAt || 'Unknown',
+  };
+}
+
+/**
+ * Import backup data into IndexedDB.
+ * @param {object} backup - parsed JSON backup object
+ * @param {'merge'|'replace'} mode
+ *   - 'merge': add new items, skip existing by ID
+ *   - 'replace': clear all existing data first, then import everything
+ * @returns {Promise<{ imported: object, skipped: number }>}
+ */
+export async function importBackup(backup, mode = 'merge') {
+  const db = await getDB();
+
+  if (mode === 'replace') {
+    await clearAllData();
+  }
+
+  // Map backup keys → IndexedDB store names
+  const storeMap = [
+    { key: 'designs',      store: 'designs' },
+    { key: 'projects',     store: 'projects' },
+    { key: 'bookmarks',    store: 'bookmarks' },
+    { key: 'prompts',      store: 'prompts' },
+    { key: 'snippets',     store: 'snippets' },
+    { key: 'stylePresets', store: 'styles' },
+  ];
+
+  const imported = {};
+  let skipped = 0;
+
+  for (const { key, store } of storeMap) {
+    const items = backup.data[key];
+    if (!Array.isArray(items) || items.length === 0) {
+      imported[key] = 0;
+      continue;
+    }
+
+    let count = 0;
+    const tx = db.transaction(store, 'readwrite');
+    for (const item of items) {
+      if (!item || !item.id) { skipped++; continue; }
+
+      if (mode === 'merge') {
+        const existing = await tx.store.get(item.id);
+        if (existing) { skipped++; continue; }
+      }
+
+      await tx.store.put(item);
+      count++;
+    }
+    await tx.done;
+    imported[key] = count;
+  }
+
+  return { imported, skipped };
+}
+
+export async function seedDummyData(force = false) {
+  const db = await getDB();
+  const tx = db.transaction('designs', 'readonly');
+  const count = await tx.store.count();
+  if (count > 0 && !force) return; // Only seed if completely empty or forced
+
+  const now = Date.now();
+  
+  // 1. Library (Design Reference)
+  await addDesign({
+    title: 'Acme Corp — SaaS Dashboard Analytics',
+    url: 'https://dribbble.com/shots/12345-Acme-SaaS-Dashboard',
+    notes: 'Incredible use of negative space and typography hierarchy. Notice how the primary metrics use Inter 600 at 36px with a tight letter-spacing (-0.03em), while the secondary labels use uppercase tracking. The subtle radial gradient in the background behind the main chart prevents the container from feeling flat without distracting from the data.\n\nImplementation ideas:\n- Use chart.js for the spline curves\n- The glassmorphism on the side panel is backdrop-filter: blur(12px) with rgba(255,255,255,0.05)',
+    tags: ['dashboard', 'saas', 'dark-mode', 'dataviz', 'glassmorphism'],
+    componentType: 'Dashboard',
+    colors: ['#0A0A0A', '#FFFFFF', '#3B82F6', '#10B981', '#1F2937'],
+    rating: 5,
+    prompt: 'A highly detailed dark mode SaaS analytics dashboard, clean modern UI, glowing blue metrics, glassmorphism sidebar, highly legible typography, Dribbble aesthetic --ar 16:9',
+  });
+
+  // 2. Project
+  await addProject({
+    title: 'FinTech Mobile App Redesign',
+    description: 'Comprehensive redesign of the core banking experience focusing on Gen-Z user acquisition. Key deliverables include the home tab, P2P transfer flow, and budgeting insights. The aesthetic should be punchy, vibrant, and trustworthy without feeling "legacy corporate".\n\nGoals:\n1. Reduce transfer time by 40%\n2. Increase feature discovery for savings pots\n3. Modernize the design language',
+    status: 'in-progress',
+    tags: ['mobile', 'fintech', 'redesign'],
+  });
+
+  // 3. Bookmark
+  await db.put('bookmarks', {
+    id: genId(),
+    title: 'Stripe Press — Beautiful Web Typography',
+    url: 'https://press.stripe.com/',
+    notes: 'The gold standard for modern editorial web design. The way they handle image carousels with smooth physical inertia and the custom serif typeface is mind-blowing. Perfect reference for our upcoming editorial project.',
+    tags: ['inspiration', 'typography', 'editorial'],
+    createdAt: now,
+  });
+
+  // 4. Prompt
+  await db.put('prompts', {
+    id: genId(),
+    title: 'Ultra-Minimalist Product Landing Page',
+    content: 'UI/UX design of a minimalist product landing page for a smart home device, Apple aesthetic, vast white space, massive bold typography, stark contrast, lifestyle photography integrated into the layout, soft natural lighting, high resolution, web design, Dribbble, Behance --ar 16:9 --v 6.0',
+    tags: ['midjourney', 'landing-page', 'minimalist', 'apple-style'],
+    useCount: 12,
+    createdAt: now,
+    updatedAt: now,
+  });
+
+  // 5. Snippet
+  await db.put('snippets', {
+    id: genId(),
+    title: 'Smooth Reveal Animation (Framer Motion)',
+    language: 'javascript',
+    code: `import { motion } from "framer-motion";
+
+export const Reveal = ({ children }) => {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 24, filter: "blur(4px)" }}
+      whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+      viewport={{ once: true, margin: "-10%" }}
+      transition={{ 
+        duration: 0.6, 
+        ease: [0.16, 1, 0.3, 1] // Custom snappy ease-out
+      }}
+    >
+      {children}
+    </motion.div>
+  );
+};`,
+    description: 'A reusable wrapper component for scrolling reveals. Uses a custom cubic-bezier for a snappy physical feel and a slight blur filter during entrance to make it look premium.',
+    tags: ['react', 'framer-motion', 'animation'],
+    createdAt: now,
+    updatedAt: now,
+  });
+
+  // 6. Style Preset
+  await db.put('styles', {
+    id: genId(),
+    name: 'Cyberpunk Neon Dark',
+    description: 'High contrast dark theme with vibrant neon accents. Perfect for crypto or gaming interfaces. Use the magenta for primary actions and cyan for secondary.',
+    colors: [
+      { hex: '#050511', name: 'Deep Space Void' },
+      { hex: '#120F24', name: 'Surface Elevated' },
+      { hex: '#00F0FF', name: 'Neon Cyan (Accent)' },
+      { hex: '#FF003C', name: 'Electric Magenta' },
+      { hex: '#FCEE0A', name: 'Cyber Yellow' },
+      { hex: '#E2E8F0', name: 'Text Primary' }
+    ],
+    typography: 'Primary: "Space Grotesk", sans-serif\nSecondary: "JetBrains Mono", monospace',
+    createdAt: now,
+    updatedAt: now,
+  });
+}

@@ -5,6 +5,7 @@ import { suggestSections, formatSectionsForPrompt } from '../utils/section-sugge
 import { copyToClipboard, downloadMarkdown } from '../utils/export.js';
 import { showToast } from '../components/toast.js';
 import { showConfirm } from '../components/dialog.js';
+import { showUndoToast } from '../components/undo-toast.js';
 import { openLightbox } from '../components/lightbox.js';
 import { openUploadModal } from '../components/upload-modal.js';
 import { formatDate, getTagColor, extractColorsFromImage } from '../utils/helpers.js';
@@ -329,34 +330,46 @@ export async function renderDesignDetail(container, navigate, params) {
     const tagContainer = $('#tag-container');
     if (!tagContainer) return;
     
-    const tagsHTML = design.tags.map(t => `<span class="badge badge--${getTagColor(t)} tag-remove" data-tag="${t}" title="Click to remove">${t} ×</span>`).join('');
-    tagContainer.innerHTML = tagsHTML + '<input type="text" id="tag-input" placeholder="Add tag..." />';
-    
-    const tagInput = $('#tag-input');
-    tagInput.addEventListener('keypress', async (e) => {
-      if (e.key === 'Enter') {
-        e.preventDefault();
-        const val = tagInput.value.trim().toLowerCase().replace(/[^a-z0-9-]/g, '');
-        if (val && !design.tags.includes(val)) {
-          design.tags.push(val);
-          await updateDesign(design.id, { tags: design.tags });
-          showToast('Tag added', 'success');
-          renderTags();
-          setTimeout(() => $('#tag-input').focus(), 0);
-        } else {
-          tagInput.value = '';
+    // Ensure input exists and has listeners
+    let tagInput = $('#tag-input');
+    if (!tagInput) {
+      tagContainer.innerHTML = '<input type="text" id="tag-input" placeholder="Add tag..." />';
+      tagInput = $('#tag-input');
+      tagInput.addEventListener('keypress', async (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          const val = tagInput.value.trim().toLowerCase().replace(/[^a-z0-9-]/g, '');
+          if (val && !design.tags.includes(val)) {
+            design.tags.push(val);
+            await updateDesign(design.id, { tags: design.tags });
+            showToast('Tag added', 'success');
+            tagInput.value = '';
+            renderTags();
+            setTimeout(() => $('#tag-input').focus(), 0);
+          } else {
+            tagInput.value = '';
+          }
         }
-      }
-    });
+      });
+    }
 
-    container.querySelectorAll('.tag-remove').forEach(badge => {
+    // Remove old badges
+    tagContainer.querySelectorAll('.tag-remove').forEach(el => el.remove());
+
+    // Insert new badges before the input
+    design.tags.forEach(t => {
+      const badge = document.createElement('span');
+      badge.className = `badge badge--${getTagColor(t)} tag-remove`;
+      badge.dataset.tag = t;
+      badge.title = 'Click to remove';
+      badge.textContent = `${t} ×`;
       badge.addEventListener('click', async () => {
-        const t = badge.dataset.tag;
         design.tags = design.tags.filter(tag => tag !== t);
         await updateDesign(design.id, { tags: design.tags });
         showToast('Tag removed', 'info');
         renderTags();
       });
+      tagContainer.insertBefore(badge, tagInput);
     });
   }
 
@@ -605,13 +618,21 @@ export async function renderDesignDetail(container, navigate, params) {
     navigate('detail', { id: clone.id });
   });
 
-  // Delete
+  // Delete (soft-delete with undo)
   $('#detail-delete').addEventListener('click', async () => {
-    const ok = await showConfirm(`"${design.title}" will be permanently deleted.`, { title: 'Delete Design?', confirmLabel: 'Delete', danger: true });
+    const ok = await showConfirm(`"${design.title}" will be deleted.`, { title: 'Delete Design?', confirmLabel: 'Delete', danger: true });
     if (ok) {
-      await deleteDesign(design.id);
-      showToast('Design deleted', 'info');
+      // Navigate away immediately for responsiveness
       navigate('library');
+      showUndoToast(`"${design.title}" deleted`, {
+        onCommit: async () => {
+          await deleteDesign(design.id);
+        },
+        onUndo: () => {
+          showToast('Delete cancelled', 'success');
+          navigate('detail', { id: design.id });
+        }
+      });
     }
   });
 

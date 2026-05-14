@@ -25,10 +25,13 @@ export async function renderKnowledgeDetail(container, navigate, params) {
   const articleContent = `
     <div class="page animate-fade-in" style="max-width: 800px; margin: 0 auto; padding-bottom: 120px;">
       
-      <!-- Back Navigation -->
-      <div style="margin-bottom: 40px; margin-top: 16px;">
+      <!-- Back Navigation & Actions -->
+      <div style="margin-bottom: 40px; margin-top: 16px; display: flex; justify-content: space-between; align-items: center;">
         <button class="btn btn-ghost" id="kb-back" style="padding-left:0; color: rgba(var(--text-rgb), 0.6);">
           <span style="margin-right:8px;">←</span> Back to Knowledge Bank
+        </button>
+        <button class="btn btn-secondary" id="kb-copy-all" style="font-size: 13px; padding: 6px 14px; border-radius: 20px;">
+          <img src="/assets/icons/action-copy.svg" class="illustrative-icon" style="width: 14px;" alt=""/> Copy as Markdown
         </button>
       </div>
 
@@ -60,7 +63,9 @@ export async function renderKnowledgeDetail(container, navigate, params) {
             .article-elaboration strong { color: var(--text-primary); font-weight: 600; }
             .article-elaboration code { font-family: var(--font-mono); background: rgba(var(--text-rgb), 0.05); padding: 2px 6px; border-radius: 4px; font-size: 14px; }
           </style>
-          ${item.elaboration || `<p style="margin: 0; font-size: 18px; font-weight: 500; color: var(--text-primary); line-height: 1.6;">${item.description}</p>`}
+          <div id="kb-elaboration-content">
+            ${item.elaboration || `<p style="margin: 0; font-size: 18px; font-weight: 500; color: var(--text-primary); line-height: 1.6;">${item.description}</p>`}
+          </div>
         </div>
 
         <h2 style="font-size: 24px; font-weight: 700; margin: 48px 0 24px; color: var(--text-primary);">Implementation Constraint</h2>
@@ -92,8 +97,8 @@ export async function renderKnowledgeDetail(container, navigate, params) {
 
           <!-- Console Footer -->
           <div style="background: rgba(0,0,0,0.2); padding: 16px 20px; display: flex; justify-content: flex-end; border-top: 1px solid rgba(255,255,255,0.05);">
-            <button class="btn btn-primary" id="kb-copy-full" style="font-size: 13px; padding: 8px 16px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: #fff; box-shadow: none;">
-              Copy Full Directive
+            <button class="btn btn-primary" id="kb-copy-prompt" style="font-size: 13px; padding: 8px 16px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: #fff; box-shadow: none;">
+              Copy Prompt Only
             </button>
           </div>
 
@@ -111,12 +116,12 @@ export async function renderKnowledgeDetail(container, navigate, params) {
     navigate('knowledge');
   });
 
-  container.querySelector('#kb-copy-full')?.addEventListener('click', async (e) => {
+  // Copy Prompt Only
+  container.querySelector('#kb-copy-prompt')?.addEventListener('click', async (e) => {
     const btn = e.currentTarget;
     await copyToClipboard(item.aiPrompt);
-    showToast('Directive copied to clipboard!', 'success');
+    showToast('Directive prompt copied!', 'success');
     
-    // Visual feedback
     const origText = btn.innerText;
     btn.innerText = 'Copied!';
     btn.style.background = 'var(--accent)';
@@ -126,6 +131,36 @@ export async function renderKnowledgeDetail(container, navigate, params) {
       btn.innerText = origText;
       btn.style.background = 'rgba(255,255,255,0.1)';
       btn.style.borderColor = 'rgba(255,255,255,0.2)';
+    }, 2000);
+  });
+
+  // Copy Full Article (Markdown)
+  container.querySelector('#kb-copy-all')?.addEventListener('click', async (e) => {
+    const btn = e.currentTarget;
+    
+    // Extract raw text from the elaboration container to strip HTML naturally
+    const elabNode = container.querySelector('#kb-elaboration-content');
+    const elaborationText = elabNode ? elabNode.innerText : item.description;
+
+    const markdownText = `# ${item.title}
+Category: ${item.category}
+
+## Principle Elaboration
+${elaborationText}
+
+## AI Implementation Constraint
+\`\`\`text
+${item.aiPrompt}
+\`\`\``;
+
+    await copyToClipboard(markdownText);
+    showToast('Full article copied as Markdown!', 'success');
+
+    const origHTML = btn.innerHTML;
+    btn.innerHTML = '<img src="/assets/icons/status-success.svg" class="illustrative-icon" style="width: 14px;" alt=""/> Copied!';
+    
+    setTimeout(() => {
+      btn.innerHTML = origHTML;
     }, 2000);
   });
 }

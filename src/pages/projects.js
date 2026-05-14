@@ -2,6 +2,7 @@
 import { getAllProjects, addProject, updateProject, deleteProject, getAllProjectFolders, addProjectFolder } from '../db/store.js';
 import { showToast } from '../components/toast.js';
 import { showPrompt, showConfirm } from '../components/dialog.js';
+import { showUndoToast } from '../components/undo-toast.js';
 import { timeAgo } from '../utils/helpers.js';
 
 let currentFolderId = 'all';
@@ -173,15 +174,27 @@ export async function renderProjects(container, navigate) {
       });
     });
 
-    // Delete
+    // Delete (soft-delete with undo)
     container.querySelectorAll('.proj-delete').forEach(btn => {
       btn.addEventListener('click', async (e) => {
         e.stopPropagation();
-        const ok = await showConfirm('This project will be permanently deleted.', { title: 'Delete Project?', confirmLabel: 'Delete', danger: true });
+        const proj = projects.find(p => p.id === btn.dataset.id);
+        if (!proj) return;
+        const ok = await showConfirm('This project will be deleted.', { title: 'Delete Project?', confirmLabel: 'Delete', danger: true });
         if (ok) {
-          await deleteProject(btn.dataset.id);
-          showToast('Project deleted', 'info');
-          load();
+          // Hide immediately from UI
+          const card = btn.closest('.project-item-card');
+          if (card) card.style.display = 'none';
+          showUndoToast(`"${proj.title}" deleted`, {
+            onCommit: async () => {
+              await deleteProject(btn.dataset.id);
+              load();
+            },
+            onUndo: () => {
+              if (card) card.style.display = '';
+              showToast('Delete cancelled', 'success');
+            }
+          });
         }
       });
     });

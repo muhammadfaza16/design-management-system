@@ -29,14 +29,26 @@ export async function renderKnowledgeBank(container, navigate) {
       container.innerHTML = `
         <div class="page animate-fade-in">
           <div class="page__header" style="margin-bottom:var(--space-6); background: linear-gradient(135deg, rgba(var(--accent-rgb), 0.1), transparent); padding: 32px; border-radius: var(--radius-xl); border: 1px solid rgba(var(--accent-rgb), 0.15);">
-            <div>
-              <div style="display:inline-flex;align-items:center;gap:6px;padding:4px 10px;background:var(--accent);color:#fff;border-radius:100px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:12px">
-                <img src="/assets/icons/misc-notes.svg" style="width:12px;height:12px;filter:brightness(0) invert(1);" /> Official Directives
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:16px;">
+              <div>
+                <div style="display:inline-flex;align-items:center;gap:6px;padding:4px 10px;background:var(--accent);color:#fff;border-radius:100px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:12px">
+                  <img src="/assets/icons/misc-notes.svg" style="width:12px;height:12px;filter:brightness(0) invert(1);" /> Official Directives
+                </div>
+                <h1 class="page__title" style="font-size: 28px; margin-bottom: 8px;">Knowledge Bank</h1>
+                <p class="page__subtitle" style="font-size: 14px; max-width: 600px;">
+                  A curated repository of foundational design principles paired with optimized AI prompts. Use these directives to guide models like Midjourney or GPT-4 in generating consistent, high-quality assets.
+                </p>
               </div>
-              <h1 class="page__title" style="font-size: 28px; margin-bottom: 8px;">Knowledge Bank</h1>
-              <p class="page__subtitle" style="font-size: 14px; max-width: 600px;">
-                A curated repository of foundational design principles paired with optimized AI prompts. Use these directives to guide models like Midjourney or GPT-4 in generating consistent, high-quality assets.
-              </p>
+              <div style="display:flex; gap: 8px;">
+                <button class="btn btn-secondary" id="kb-export-all" style="background:var(--bg-surface); border-color:rgba(var(--text-rgb),0.15); box-shadow:0 4px 12px rgba(0,0,0,0.05); font-size:13px; padding: 8px 16px;">
+                  <img src="/assets/icons/action-copy.svg" class="illustrative-icon" style="width:16px;height:16px;filter:var(--icon-filter);" alt=""/>
+                  Copy
+                </button>
+                <button class="btn btn-primary" id="kb-download-md" style="font-size:13px; padding: 8px 16px; box-shadow:0 4px 12px rgba(var(--accent-rgb),0.15);">
+                  <img src="/assets/icons/action-export.svg" class="illustrative-icon" style="width:16px;height:16px;filter:var(--icon-primary-filter);" alt=""/>
+                  Download .md
+                </button>
+              </div>
             </div>
           </div>
 
@@ -111,7 +123,7 @@ export async function renderKnowledgeBank(container, navigate) {
           `).join('')}
         `;
 
-    // Copy Listeners
+      // Copy Listeners
     container.querySelectorAll('.kb-copy').forEach(btn => {
       btn.addEventListener('click', async (e) => {
         e.stopPropagation();
@@ -128,6 +140,58 @@ export async function renderKnowledgeBank(container, navigate) {
       card.addEventListener('click', () => {
         navigate('knowledge-detail', { id: card.dataset.id });
       });
+    });
+
+    // Export Master Prompt Logic
+    function getMasterMarkdown() {
+      let md = `# DesignVault Master Constraints\n\n`;
+      md += `You are an expert AI design assistant. Adhere strictly to the following architectural and design principles. When generating code, UIs, or visual assets, format your output to align with these exact constraints.\n\n`;
+      
+      const grouped = {};
+      KNOWLEDGE_BANK.forEach(k => {
+        if (!grouped[k.category]) grouped[k.category] = [];
+        grouped[k.category].push(k);
+      });
+
+      for (const [cat, items] of Object.entries(grouped)) {
+        md += `## Category: ${cat}\n\n`;
+        items.forEach(k => {
+          md += `### ${k.title}\n`;
+          md += `**Principle**: ${k.description}\n\n`;
+          
+          if (k.elaboration) {
+             const temp = document.createElement('div');
+             temp.innerHTML = k.elaboration;
+             md += `**Details**: ${temp.innerText.trim()}\n\n`;
+          }
+          md += `**Constraint / Directive**:\n\`\`\`text\n${k.aiPrompt}\n\`\`\`\n\n`;
+        });
+      }
+      return md;
+    }
+
+    container.querySelector('#kb-export-all')?.addEventListener('click', async (e) => {
+      const btn = e.currentTarget;
+      await copyToClipboard(getMasterMarkdown());
+      showToast('Master constraints copied!', 'success');
+      
+      const origHTML = btn.innerHTML;
+      btn.innerHTML = '<img src="/assets/icons/status-success.svg" class="illustrative-icon" style="width:16px;height:16px;" alt=""/> Copied!';
+      setTimeout(() => { btn.innerHTML = origHTML; }, 2000);
+    });
+
+    container.querySelector('#kb-download-md')?.addEventListener('click', () => {
+      const md = getMasterMarkdown();
+      const blob = new Blob([md], { type: 'text/markdown' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'DesignVault_Master_Constraints.md';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      showToast('File downloaded!', 'success');
     });
   }
 
